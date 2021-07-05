@@ -14,6 +14,7 @@
 #! This is the main source file of QUICK integral code generator.      !
 #!---------------------------------------------------------------------!
 
+import one_electron_integral
 
 
 

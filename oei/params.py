@@ -66,4 +66,4 @@ def print_trans():
         print("trans[%d][%d][%d] = %d" % (idx_x[i],idx_y[i],idx_z[i],trans[idx_x[i]][idx_y[i]][idx_z[i]]))
 
 
-print_trans()
+#print_trans()
