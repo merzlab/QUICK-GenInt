@@ -53,19 +53,23 @@ class PSint(OEint):
 
                 self.fhc.write("class PSint_%d { \n" % (m))
                 self.fhc.write("public: \n")
-                self.fhc.write("  QUICKDouble x_%d_1; // Px, S \n" % (m))
-                self.fhc.write("  QUICKDouble x_%d_2; // Py, S \n" % (m))
-                self.fhc.write("  QUICKDouble x_%d_3; // Pz, S \n" % (m))
-                self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
+
+                # set labels for improving readability 
+                lbl=["Px", "Py", "Pz"]
+
+                # write class variables
+                idx=1
+                for i in range(0,3):
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (m, idx, lbl[i], "S"))
+
+                # write class functions
+                self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
                 self.fhc.write("}; \n")
 
-                self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
-                self.fhd.write("  QUICKDouble x_%d_1=(PP[0]-BB[0]) * LOCVY(0, 0, %d)\
- - (PP[0]-CC[0]) * LOCVY(0, 0, %d)\n" % (m, m, m))
-                self.fhd.write("  QUICKDouble x_%d_2=(PP[1]-BB[1]) * LOCVY(0, 0, %d)\
- - (PP[1]-CC[1]) * LOCVY(0, 0, %d)\n" % (m, m, m))
-                self.fhd.write("  QUICKDouble x_%d_3=(PP[2]-BB[2]) * LOCVY(0, 0, %d)\
- - (PP[2]-CC[2]) * LOCVY(0, 0, %d)\n" % (m, m, m))
+                self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
+                for i in range(0,3):
+                    self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (m, i, i, i, m, i, i, m))
+
                 self.fhd.write("} \n\n")                
 
 
@@ -83,19 +87,25 @@ class SPint(OEint):
 
                 self.fhc.write("class SPint_%d { \n" % (m))
                 self.fhc.write("public: \n")
-                self.fhc.write("  QUICKDouble x_%d_1; // S, Px \n" % (m))
-                self.fhc.write("  QUICKDouble x_%d_2; // S, Py \n" % (m))
-                self.fhc.write("  QUICKDouble x_%d_3; // S, Pz \n" % (m))
+
+                # set labels for improving readability 
+                lbl=["Px", "Py", "Pz"]
+
+                # write class variables
+                idx=1
+                for i in range(0,3):
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (m, idx, "S", lbl[i]))
+                    idx += 1
+
+                # write class functions
                 self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
                 self.fhc.write("}; \n")
 
                 self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
-                self.fhd.write("  QUICKDouble x_%d_1=(PP[0]-BB[0]) * LOCVY(0, 0, %d)\
- - (PP[0]-CC[0]) * LOCVY(0, 0, %d)\n" % (m, m, m))
-                self.fhd.write("  QUICKDouble x_%d_2=(PP[1]-BB[1]) * LOCVY(0, 0, %d)\
- - (PP[1]-CC[1]) * LOCVY(0, 0, %d)\n" % (m, m, m))
-                self.fhd.write("  QUICKDouble x_%d_3=(PP[2]-BB[2]) * LOCVY(0, 0, %d)\
- - (PP[2]-CC[2]) * LOCVY(0, 0, %d)\n" % (m, m, m))
+
+                for i in range(0,3):
+                    self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (m, i, i, i, m, i, i, m))
+
                 self.fhd.write("} \n\n") 
 
 
@@ -113,18 +123,22 @@ class PPint(OEint):
         
             self.fhc.write("class PPint_%d { \n" % (m))
             self.fhc.write("public: \n")
-            self.fhc.write("  QUICKDouble x_%d_1; // Px, Px \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_2; // Px, Py \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_3; // Px, Pz \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_4; // Py, Px \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_5; // Py, Py \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_6; // Py, Pz \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_7; // Pz, Px \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_8; // Pz, Py \n" % (m))
-            self.fhc.write("  QUICKDouble x_%d_9; // Pz, Pz \n" % (m))
+
+            # set labels for improving readability 
+            lbl=["Px", "Py", "Pz"]
+
+            # write class variables
+            idx=1
+            for i in range(0,3):
+                for j in range(0,3):
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (m, idx, lbl[i], lbl[j]))
+                    idx += 1
+
+            # write class functions
             self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
             self.fhc.write("}; \n")
 
+            # write function definitions
             self.fhd.write("__device__ __inline__ PPauxint_%d::PPauxint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
             self.fhd.write("  PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m, m))
             self.fhd.write("  PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m+1, m+1))
@@ -141,6 +155,8 @@ class PPint(OEint):
                     idx += 1
             self.fhd.write("\n } \n")
 
+
+
 def write_oei():
 
     # set files
@@ -156,6 +172,7 @@ def write_oei():
 
     # generate <s|p>
     sp=SPint(0)
+    sp.gen_int()
 
     # generate <p|p>
     pp=PPint(0)
