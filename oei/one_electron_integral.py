@@ -43,35 +43,110 @@ class SSint(OEint):
 class PSint(OEint):
     def gen_int(self):
         # write code for true integral (i.e. m=0). We will store the computed integral value directly inside store array.
-        if self.m == 0:
-            self.fhd.write("__device__ void PSint(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){\n")
-            for i in range(0,3):
-                self.fhd.write("  LOCSTORE(store, 0, %d, STOREDIM, STOREDIM)=(PP[%d]-BB[%d]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\
- - (PP[%d]-CC[%d]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\n" % (i, i, i, 0, i, i, 0))
-            self.fhd.write("}\n")
+        #if self.m == 0:
+        #    self.fhd.write("__device__ void PSint(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){\n")
+        #    for i in range(0,3):
+        #        self.fhd.write("  LOCSTORE(store, 0, %d, STOREDIM, STOREDIM)=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d)\
+        #- (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (i, i, i, 0, i, i, 0))
+        #    self.fhd.write("}\n")
 
-        else:
+        #else:
             # write code paths for auxilary integrals. Note that we use C++ classes here. 
-            for i in range(0,self.m):
-                self.fhc.write("PS auxilary integral m=%d \n" % (i))
-                self.fhc.write("class PSauxint_%d { \n" % (i))
-                self.fhc.write("public:")
-                self.fhc.write("  QUICKDouble x_%d_1; \n" % (i))
-                self.fhc.write("  QUICKDouble x_%d_2; \n" % (i))
-                self.fhc.write("  QUICKDouble x_%d_3; \n" % (i))
-                self.fhc.write("  __device__ __inline__ PSauxint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (i))
+            for i in range(0,self.m+1):
+                self.fhc.write("/* PS auxilary integral m=%d */\n" % (i))
+                self.fhc.write("class PSint_%d { \n" % (i))
+                self.fhc.write("public: \n")
+                self.fhc.write("  QUICKDouble x_%d_1; // Px, S \n" % (i))
+                self.fhc.write("  QUICKDouble x_%d_2; // Py, S \n" % (i))
+                self.fhc.write("  QUICKDouble x_%d_3; // Pz, S \n" % (i))
+                self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (i))
                 self.fhc.write("}; \n")
 
-                self.fhd.write("PS auxilary integral m=%d \n" % (i))
-                self.fhd.write("  __device__ __inline__ PSauxint_%d::PSauxint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n" % (i, i))
-                self.fhd.write("    QUICKDouble x_%d_1=(PP[0]-BB[0]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\
- - (PP[0]-CC[0]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\n" % (i, i, i))
-                self.fhd.write("    QUICKDouble x_%d_2=(PP[1]-BB[1]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\
- - (PP[1]-CC[1]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\n" % (i, i, i))
-                self.fhd.write("    QUICKDouble x_%d_3=(PP[2]-BB[2]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\
- - (PP[2]-CC[2]) * LOCVY(YVerticalTemp, 0, 0, %d, VDIM1, VDIM2, VDIM3)\n" % (i, i, i))
+                self.fhd.write("/* PS auxilary integral m=%d */ \n" % (i))
+                self.fhd.write("  __device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n" % (i, i))
+                self.fhd.write("    QUICKDouble x_%d_1=(PP[0]-BB[0]) * LOCVY(0, 0, %d)\
+ - (PP[0]-CC[0]) * LOCVY(0, 0, %d)\n" % (i, i, i))
+                self.fhd.write("    QUICKDouble x_%d_2=(PP[1]-BB[1]) * LOCVY(0, 0, %d)\
+ - (PP[1]-CC[1]) * LOCVY(0, 0, %d)\n" % (i, i, i))
+                self.fhd.write("    QUICKDouble x_%d_3=(PP[2]-BB[2]) * LOCVY(0, 0, %d)\
+ - (PP[2]-CC[2]) * LOCVY(0, 0, %d)\n" % (i, i, i))
                 self.fhd.write("  } \n")                
 
+
+# <s|p> class, a subclass of OEint
+class SPint(OEint):
+    def gen_int(self):
+        # write code for true integral (i.e. m=0). We will store the computed integral value directly inside store array.
+        #if self.m == 0:
+        #    self.fhd.write("__device__ void SPint(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){\n")
+        #    for i in range(0,3):
+        #        self.fhd.write("  LOCSTORE(store, %d, 0, STOREDIM, STOREDIM)=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d)\
+        #- (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (i, i, i, 0, i, i, 0))
+        #    self.fhd.write("}\n")
+
+        #else:
+            # write code paths for auxilary integrals. Note that we use C++ classes here. 
+            for i in range(0,self.m+1):
+                self.fhc.write("/* SP auxilary integral m=%d */ \n" % (i))
+                self.fhc.write("class SPint_%d { \n" % (i))
+                self.fhc.write("public: \n")
+                self.fhc.write("  QUICKDouble x_%d_1; // S, Px \n" % (i))
+                self.fhc.write("  QUICKDouble x_%d_2; // S, Py \n" % (i))
+                self.fhc.write("  QUICKDouble x_%d_3; // S, Pz \n" % (i))
+                self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (i))
+                self.fhc.write("}; \n")
+
+                self.fhd.write("/* PS auxilary integral m=%d */ \n" % (i))
+                self.fhd.write("  __device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n" % (i, i))
+                self.fhd.write("    QUICKDouble x_%d_1=(PP[0]-BB[0]) * LOCVY(0, 0, %d)\
+ - (PP[0]-CC[0]) * LOCVY(0, 0, %d)\n" % (i, i, i))
+                self.fhd.write("    QUICKDouble x_%d_2=(PP[1]-BB[1]) * LOCVY(0, 0, %d)\
+ - (PP[1]-CC[1]) * LOCVY(0, 0, %d)\n" % (i, i, i))
+                self.fhd.write("    QUICKDouble x_%d_3=(PP[2]-BB[2]) * LOCVY(0, 0, %d)\
+ - (PP[2]-CC[2]) * LOCVY(0, 0, %d)\n" % (i, i, i))
+                self.fhd.write("  } \n") 
+
+
+# <p|p> class, subclass of OEint
+class PPint(OEint):
+    def gen_int(self):
+        for i in range(0,self.m+1):
+            if i == 0:
+                self.fhc.write("/* PP true integral m=%d */ \n" % (i)) 
+                self.fhd.write("/* PP true integral m=%d */ \n" % (i)) 
+            else:
+                self.fhc.write("/* PP auxilary integral m=%d */ \n" % (i))
+                self.fhd.write("/* PP auxilary integral m=%d */ \n" % (i))          
+        
+            self.fhc.write("class PPint_%d { \n" % (i))
+            self.fhc.write("public: \n")
+            self.fhc.write("  QUICKDouble x_%d_1; // Px, Px \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_2; // Px, Py \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_3; // Px, Pz \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_4; // Py, Px \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_5; // Py, Py \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_6; // Py, Pz \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_7; // Pz, Px \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_8; // Pz, Py \n" % (i))
+            self.fhc.write("  QUICKDouble x_%d_9; // Pz, Pz \n" % (i))
+            self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (i))          
+            self.fhc.write("}; \n")
+
+            self.fhd.write("  __device__ __inline__ PPauxint_%d::PPauxint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n" % (i, i))
+            self.fhd.write("    PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (i, i))
+            self.fhd.write("    PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (i+1, i+1))
+
+            idx=1
+            for idim in range(0,3):
+                for jdim in range(0,3):
+                    self.fhd.write("    x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d \n" % (i, idx, jdim, jdim, i, i, idim+1,\
+                    jdim, jdim, i+1, i+1, idim+1))
+
+                    if idim == jdim:
+                        self.fhd.write("    x_%d_%d = x_%d_%d + 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)) \n" % (i, idx, i, idx, i, i+1))
+
+                    idx += 1
+            self.fhd.write("  } \n")
 
 def write_oei():
 
@@ -79,10 +154,10 @@ def write_oei():
     OEint.fhc = open('gpu_oei_classes.h','w')
     OEint.fhd = open('gpu_oei_definitions.h','w')
 
-    ps=PSint(6)
-    ps.gen_int()
+    pp=PPint(0)
+    pp.gen_int()
 
     OEint.fhc.close()
     OEint.fhd.close()
 
-#write_oei()
+write_oei()
