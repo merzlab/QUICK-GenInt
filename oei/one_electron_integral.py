@@ -139,7 +139,7 @@ class PPint(OEint):
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ PPauxint_%d::PPauxint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
             self.fhd.write("  PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m, m))
             self.fhd.write("  PSint ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m+1, m+1))
 
@@ -156,6 +156,57 @@ class PPint(OEint):
             self.fhd.write("\n } \n")
 
 
+# <d|s> class, subclass of OEint
+class DSint(OEint):
+    def gen_int(self):
+        # write code paths for integrals. Note that we use C++ classes here.
+        for m in range(0,self.max_m+1):
+            if m == 0:
+                self.fhc.write("\n/* DS true integral, m=%d */ \n" % (m)) 
+                self.fhd.write("\n/* DS true integral, m=%d */ \n" % (m)) 
+            else:
+                self.fhc.write("\n/* DS auxilary integral, m=%d */ \n" % (m))
+                self.fhd.write("\n/* DS auxilary integral, m=%d */ \n" % (m))              
+
+            self.fhc.write("class DSint_%d { \n" % (m))
+            self.fhc.write("public: \n")
+
+            # set labels for improving readability 
+            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
+            lbl2=["x", "y", "z"]
+
+            # write class variables
+            idx=1
+            for i in range(0,6):
+                for j in range(0,3):
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s %s\n" % (m, idx, lbl[i], "S", lbl2[j]))
+                    idx += 1
+
+            # write class functions
+            self.fhc.write("  __device__ __inline__ DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("}; \n")
+
+            # write function definitions
+            self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
+            self.fhd.write("  PSint ps_%d(AA, CC, PP); // construct [p|s] for m=%d \n" % (m, m))
+            self.fhd.write("  PSint ps_%d(AA, CC, PP); // construct [p|s] for m=%d \n" % (m+1, m+1))
+            self.fhd.write("  PSint ps_%d(AA, CC, PP); // construct [p|s] for m=%d \n" % (m+2, m+2))
+
+            idx=1
+            for i in range(0,6):
+                tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
+                for j in range(0,3):
+                    if params.Mcal[i+4][j] != 0:
+                        tmp_mcal[j] -= 1
+                        tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
+                        self.fhd.write("  x_%d_%d = (PP[%d]-AA[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d \n" % (m, idx, j, j, m, m, tmp_i,\
+                        j, j, m+1, m+1, tmp_i-1))
+
+                        if params.Mcal[i+4][j] == 2:
+                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)) \n" % (m, idx, m, m+1))
+
+                        idx += 1
+            self.fhd.write("\n } \n")
 
 def write_oei():
 
@@ -167,7 +218,7 @@ def write_oei():
     # <s|s> is trivial and we wont auto generate it.
 
     # generate <p|s>
-    ps=PSint(1)
+    ps=PSint(2)
     ps.gen_int() 
 
     # generate <s|p>
@@ -177,6 +228,10 @@ def write_oei():
     # generate <p|p>
     pp=PPint(0)
     pp.gen_int()
+
+    # generate <d|s>
+    ds=DSint(0)
+    ds.gen_int()
 
     OEint.fhc.close()
     OEint.fhd.close()
