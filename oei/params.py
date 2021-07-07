@@ -18,7 +18,7 @@
 # code they serve as maps to store/load integrals from VRR. 3D arrays are implemented
 # as 3D tuples in python. 
 
-# The rows represent the x dimension, so below we have 8 rows, 0-7. The column of each row represent y
+# In the trans array, rows represent the x dimension, so below we have 8 rows, 0-7. The column of each row represent y
 # dimension. For eg, 0th row has 8 columns and 7th row has 1 column. Elements encapsulated by brackets
 # represent z dimension. For eg, there are 8 z components in row 0, column 0 and just 1 component in
 # row 7, column 0.  
@@ -31,6 +31,18 @@ trans=(\
     ((54,70,109),(72,85),(111,)),\
     ((82,103),(105,)),\
     ((118,),)\
+    )
+
+# The following 3x120 2D array is used to indicate the cartesian components of basis functions. The columns of each row stand for
+# X, Y and Z cartesian coodinates. Therefore, row 0 indicates S, row 1-3 indicate
+# P ( Px=(1,0,0), Py=(0,1,0), Pz=(0,0,1)), row 4-9 indicate D (where Dxy=(1,1,0), Dyz=(0,1,1), Dxz=(1,0,1), Dxx=(2,0,0), Dyy=(0,2,0),
+# Dzz=(0,0,2)), row 10-19 indicate F and row 20-34 indicate G.
+   
+Mcal=((0,0,0),\
+    (1,0,0), (0,1,0), (0,0,1),\
+    (1,1,0), (0,1,1), (1,0,1), (2,0,0), (0,2,0), (0,0,2),\
+    (1,1,1), (2,1,0), (1,2,0), (2,0,1), (1,0,2), (0,2,1), (0,1,2), (3,0,0), (0,3,0), (0,0,3),\
+    (2,2,0), (2,0,2), (0,2,2), (2,1,1), (1,2,1), (1,1,2), (3,0,1), (1,0,3), (3,1,0), (1,3,0), (0,3,1), (0,1,3), (4,0,0), (0,4,0), (0,0,4)\
     )
 
 # compare stored values with fortran code, print in the same order
@@ -65,5 +77,10 @@ def print_trans():
     for i in range(0,len(idx_x)):
         print("trans[%d][%d][%d] = %d" % (idx_x[i],idx_y[i],idx_z[i],trans[idx_x[i]][idx_y[i]][idx_z[i]]))
 
+def print_mcal():
+    for i in range(0, len(Mcal)):
+        for j in range(0, len(Mcal[i])):
+            print("Mcal[%d][%d] = %d" % (i, j, Mcal[i][j]))
 
 #print_trans()
+print_mcal()
