@@ -21,6 +21,7 @@ class OEint:
     # set file handlers
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
+    fhdr= 0 # file handler for driver implementations
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered <i|j>. If max_m=0, the integral is a true integral
@@ -34,10 +35,17 @@ class OEint:
     def gen_int(self):
         pass 
 
+    # save true integrals into store array
+    def save_int(self):
+        pass
 
 # <s|s> class, a subclass of OEint
 class SSint(OEint):
-    pass
+
+    # generate code to save computed [s|s] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* SS integral, m=%d */ \n" % (0))
+        self.fhdr.write("  LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) = LOCVY(0, 0, 0);\n")
 
 # <p|s> class, a subclass of OEint
 class PSint(OEint):
@@ -67,10 +75,16 @@ class PSint(OEint):
 
                 self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
                 for i in range(0,3):
-                    self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (i+1, 0, i, i, m, i, i, m))
+                    self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (i+1, 0, i, i, m, i, i, m))
 
-                self.fhd.write("} \n\n")                
+                self.fhd.write("} \n\n")
 
+    # generate code to save computed [p|s] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* PS integral, m=%d */ \n" % (0))
+        self.fhdr.write("  PSint_0 ps(AA, CC, PP); \n")
+        for i in range(0,3):                
+            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
 
 # <s|p> class, a subclass of OEint
 class SPint(OEint):
@@ -101,9 +115,16 @@ class SPint(OEint):
                 self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
 
                 for i in range(0,3):
-                    self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d)\n" % (0, i+1, i, i, m, i, i, m))
+                    self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (0, i+1, i, i, m, i, i, m))
 
                 self.fhd.write("} \n\n") 
+
+    # generate code to save computed [s|p] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* SP integral, m=%d */ \n" % (0))
+        self.fhdr.write("  SPint_0 sp(BB, CC, PP); \n")
+        for i in range(0,3):                
+            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
 
 
 # <p|p> class, subclass of OEint
@@ -141,14 +162,22 @@ class PPint(OEint):
             idx=1
             for i in range(0,3):
                 for j in range(0,3):
-                    self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d \n" % (i+1, j+1, j, j, m, i+1, 0,\
+                    self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d; \n" % (i+1, j+1, j, j, m, i+1, 0,\
                     j, j, m+1, i+1, 0))
 
                     if i == j:
-                        self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)) \n" % (i+1, j+1, m, m+1))
+                        self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)); \n" % (i+1, j+1, m, m+1))
 
                     idx += 1
             self.fhd.write("\n } \n")
+
+    # generate code to save computed [p|p] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* PP integral, m=%d */ \n" % (0))
+        self.fhdr.write("  PPint_0 pp(BB, CC, PP, ABCD); \n")
+        for i in range(0,3):
+            for j in range(0,3):
+                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
 
 
 # <d|s> class, subclass of OEint
@@ -188,14 +217,21 @@ class DSint(OEint):
                     if params.Mcal[i+4][j] != 0:
                         tmp_mcal[j] -= 1
                         tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                        self.fhd.write("  x_%d_%d = (PP[%d]-AA[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d \n" % (i+4, 0, j, j, m, tmp_i-1, 0,\
+                        self.fhd.write("  x_%d_%d = (PP[%d]-AA[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d; \n" % (i+4, 0, j, j, m, tmp_i-1, 0,\
                         j, j, m+1, tmp_i-1, 0))
 
                         if params.Mcal[i+4][j] == 2:
-                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)) \n" % (i+4, 0, m, m+1))
+                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)); \n" % (i+4, 0, m, m+1))
 
                         break
             self.fhd.write("\n } \n")
+
+    # generate code to save computed [d|s] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* DS integral, m=%d */ \n" % (0))
+        self.fhdr.write("  DSint_0 ds(AA, CC, PP, ABCD); \n")
+        for i in range(0,6):
+            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
 
 
 # <s|d> class, subclass of OEint
@@ -235,14 +271,21 @@ class SDint(OEint):
                     if params.Mcal[i+4][j] != 0:
                         tmp_mcal[j] -= 1
                         tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                        self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d \n" % (0, i+4, j, j, m, 0, tmp_i-1,\
+                        self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d; \n" % (0, i+4, j, j, m, 0, tmp_i-1,\
                         j, j, m+1, 0, tmp_i-1))
 
                         if params.Mcal[i+4][j] == 2:
-                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)) \n" % (0, i+4, m, m+1))
+                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (LOCVY(0, 0, %d) - LOCVY(0, 0, %d)); \n" % (0, i+4, m, m+1))
 
                         break
             self.fhd.write("\n } \n")
+
+    # generate code to save computed [s|d] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* SD integral, m=%d */ \n" % (0))
+        self.fhdr.write("  SDint_0 sd(AA, CC, PP, ABCD); \n")
+        for i in range(0,6):
+            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
 
 
 # <d|p> class, subclass of OEint
@@ -283,17 +326,25 @@ class DPint(OEint):
                     tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
                     for k in range(0,3):
                         if params.Mcal[j+1][k] != 0:
-                            self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ds_%d.x_%d_%d - (PP[%d]-CC[%d]) * ds_%d.x_%d_%d \n" % (i+4, j+1, k, k, m, i+4, 0,\
+                            self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ds_%d.x_%d_%d - (PP[%d]-CC[%d]) * ds_%d.x_%d_%d; \n" % (i+4, j+1, k, k, m, i+4, 0,\
                             k, k, m+1, i+4, 0))
 
 
                             if tmp_mcal[k] != 0:
                                 tmp_mcal[k] -= 1
                                 tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (ds_%d.x_%d_%d - ds_%d.x_%d_%d) \n" % (i+4, j+1, params.Mcal[i+4][k], m, tmp_i-1, 0, m+1, tmp_i-1, 0))
+                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (ds_%d.x_%d_%d - ds_%d.x_%d_%d); \n" % (i+4, j+1, params.Mcal[i+4][k], m, tmp_i-1, 0, m+1, tmp_i-1, 0))
 
                             break
             self.fhd.write("\n } \n")
+
+    # generate code to save computed [d|p] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* DP integral, m=%d */ \n" % (0))
+        self.fhdr.write("  DPint_0 dp(BB, CC, PP, ABCD); \n")
+        for i in range(0,6):
+            for j in range(0,3):
+                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
 
 
 
@@ -345,6 +396,14 @@ class PDint(OEint):
                                 self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (sd_%d.x_%d_%d - sd_%d.x_%d_%d) \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
                             break
             self.fhd.write("\n } \n")
+
+    # generate code to save computed [p|d] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* PD integral, m=%d */ \n" % (0))
+        self.fhdr.write("  PDint_0 pd(AA, CC, PP, ABCD); \n")
+        for i in range(0,6):
+            for j in range(0,3):
+                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
 
 
 # <d|d> class, subclass of OEint
@@ -410,6 +469,13 @@ class DDint(OEint):
                             break
             self.fhd.write("\n } \n")
 
+    # generate code to save computed [d|d] integral
+    def save_int(self):
+        self.fhdr.write("\n  /* DD integral, m=%d */ \n" % (0))
+        self.fhdr.write("  DDint_0 dd(BB, CC, PP, ABCD); \n")
+        for i in range(0,6):
+            for j in range(0,6):
+                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
 
 
 def write_oei():
@@ -417,9 +483,11 @@ def write_oei():
     # set files
     OEint.fhc = open('gpu_oei_classes.h','w')
     OEint.fhd = open('gpu_oei_definitions.h','w')
+    OEint.fhdr= open('gpu_oei_drivers.h','w')
 
-    # generate integrals for systems containing only s and p functions.
-    # <s|s> is trivial and we wont auto generate it.
+    # generate integral classes for systems containing only s, p and d functions.
+    # generate <s|s>, this is trivial and we will directly save the integral value from the driver. 
+    ss=SSint()
 
     # generate <p|s>
     ps=PSint(2)
@@ -453,7 +521,21 @@ def write_oei():
     dd=DDint(0)
     dd.gen_int()
 
+    # write driver to use classes and save computed primitive integrals
+    OEint.fhdr.write("__device__ __inline__ OEint_vertical(QUICKDouble* AA, QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n")
+    ss.save_int()
+    ps.save_int()
+    sp.save_int()
+    pp.save_int()
+    ds.save_int()
+    sd.save_int()
+    dp.save_int()
+    pd.save_int()
+    dd.save_int()
+    OEint.fhdr.write("\n } \n")
+
     OEint.fhc.close()
     OEint.fhd.close()
+    OEint.fhdr.close()
 
 write_oei()
