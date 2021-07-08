@@ -50,34 +50,34 @@ class SSint(OEint):
 # <p|s> class, a subclass of OEint
 class PSint(OEint):
     def gen_int(self):
-            # write code paths for integrals. Note that we use C++ classes here. 
-            for m in range(0,self.max_m+1):
-                if m == 0:
-                    self.fhc.write("\n/* PS true integral, m=%d */ \n" % (m)) 
-                    self.fhd.write("\n/* PS true integral, m=%d */ \n" % (m)) 
-                else:
-                    self.fhc.write("\n/* PS auxilary integral, m=%d */ \n" % (m))
-                    self.fhd.write("\n/* PS auxilary integral, m=%d */ \n" % (m))  
+        # write code paths for integrals. Note that we use C++ classes here. 
+        for m in range(0,self.max_m+1):
+            if m == 0:
+                self.fhc.write("\n/* PS true integral, m=%d */ \n" % (m)) 
+                self.fhd.write("\n/* PS true integral, m=%d */ \n" % (m)) 
+            else:
+                self.fhc.write("\n/* PS auxilary integral, m=%d */ \n" % (m))
+                self.fhd.write("\n/* PS auxilary integral, m=%d */ \n" % (m))  
 
-                self.fhc.write("class PSint_%d{ \n" % (m))
-                self.fhc.write("public: \n")
+            self.fhc.write("class PSint_%d{ \n" % (m))
+            self.fhc.write("public: \n")
 
-                # set labels for improving readability 
-                lbl=["Px", "Py", "Pz"]
+            # set labels for improving readability 
+            lbl=["Px", "Py", "Pz"]
 
-                # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
-                for i in range(0,3):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, lbl[i], "S"))
+            # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
+            for i in range(0,3):
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, lbl[i], "S"))
 
-                # write class functions
-                self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
-                self.fhc.write("}; \n")
+            # write class functions
+            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
+            self.fhc.write("}; \n")
 
-                self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
-                for i in range(0,3):
-                    self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (i+1, 0, i, i, m, i, i, m))
+            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
+            for i in range(0,3):
+                self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (i+1, 0, i, i, m, i, i, m))
 
-                self.fhd.write("} \n\n")
+            self.fhd.write("} \n\n")
 
     # generate code to save computed [p|s] integral
     def save_int(self):
@@ -89,35 +89,35 @@ class PSint(OEint):
 # <s|p> class, a subclass of OEint
 class SPint(OEint):
     def gen_int(self):
-            # write code paths for integrals. Note that we use C++ classes here. 
-            for m in range(0,self.max_m+1):
-                if m==0:
-                    self.fhc.write("\n/* SP true integral, m=%d */ \n" % (m)) 
-                    self.fhd.write("\n/* SP true integral, m=%d */ \n" % (m)) 
-                else:
-                    self.fhc.write("\n/* SP auxilary integral, m=%d */ \n" % (m))
-                    self.fhd.write("\n/* SP auxilary integral, m=%d */ \n" % (m))                
+        # write code paths for integrals. Note that we use C++ classes here. 
+        for m in range(0,self.max_m+1):
+            if m==0:
+                self.fhc.write("\n/* SP true integral, m=%d */ \n" % (m)) 
+                self.fhd.write("\n/* SP true integral, m=%d */ \n" % (m)) 
+            else:
+                self.fhc.write("\n/* SP auxilary integral, m=%d */ \n" % (m))
+                self.fhd.write("\n/* SP auxilary integral, m=%d */ \n" % (m))                
 
-                self.fhc.write("class SPint_%d{ \n" % (m))
-                self.fhc.write("public: \n")
+            self.fhc.write("class SPint_%d{ \n" % (m))
+            self.fhc.write("public: \n")
 
-                # set labels for improving readability 
-                lbl=["Px", "Py", "Pz"]
+            # set labels for improving readability 
+            lbl=["Px", "Py", "Pz"]
 
-                # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
-                for i in range(0,3):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", lbl[i]))
+            # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
+            for i in range(0,3):
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", lbl[i]))
 
-                # write class functions
-                self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
-                self.fhc.write("}; \n")
+            # write class functions
+            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
+            self.fhc.write("}; \n")
 
-                self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
 
-                for i in range(0,3):
-                    self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (0, i+1, i, i, m, i, i, m))
+            for i in range(0,3):
+                self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * LOCVY(0, 0, %d) - (PP[%d]-CC[%d]) * LOCVY(0, 0, %d);\n" % (0, i+1, i, i, m, i, i, m))
 
-                self.fhd.write("} \n\n") 
+            self.fhd.write("} \n\n") 
 
     # generate code to save computed [s|p] integral
     def save_int(self):
