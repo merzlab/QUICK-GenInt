@@ -83,4 +83,4 @@ def print_mcal():
             print("Mcal[%d][%d] = %d" % (i, j, Mcal[i][j]))
 
 #print_trans()
-print_mcal()
+#print_mcal()
