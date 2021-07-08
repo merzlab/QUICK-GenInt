@@ -11,7 +11,10 @@
 
 #!---------------------------------------------------------------------!
 #! This source file contains classes necessary for generating one      !
-#! electron integrals.                                                 !
+#! electron integrals. Note that we use vertical recurrence relations  !
+#! algorithm developed by Obara and Saika. See J. Chem. Phys. 1986, 84,!
+#! 3963−3974 and J. Chem. Phys. 1988, 89, 5777−5786 papers for theore- !
+#! tical details.                                                      !
 #!---------------------------------------------------------------------!
 
 import params
@@ -24,7 +27,7 @@ class OEint:
     fhdr= 0 # file handler for driver implementations
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
-    # of the integral being considered <i|j>. If max_m=0, the integral is a true integral
+    # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
     # and m>0 results in auxliary integrals. 
     def __init__(self,max_m=0):
         self.max_m=max_m
@@ -39,7 +42,7 @@ class OEint:
     def save_int(self):
         pass
 
-# <s|s> class, a subclass of OEint
+# [s|s] class, a subclass of OEint
 class SSint(OEint):
 
     # generate code to save computed [s|s] integral
@@ -47,7 +50,7 @@ class SSint(OEint):
         self.fhdr.write("\n  /* SS integral, m=%d */ \n" % (0))
         self.fhdr.write("  LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) = LOCVY(0, 0, 0);\n")
 
-# <p|s> class, a subclass of OEint
+# [p|s] class, a subclass of OEint
 class PSint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here. 
@@ -86,7 +89,7 @@ class PSint(OEint):
         for i in range(0,3):                
             self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
 
-# <s|p> class, a subclass of OEint
+# [s|p] class, a subclass of OEint
 class SPint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here. 
@@ -127,7 +130,7 @@ class SPint(OEint):
             self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
 
 
-# <p|p> class, subclass of OEint
+# [p|p] class, subclass of OEint
 class PPint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -180,7 +183,7 @@ class PPint(OEint):
                 self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
 
 
-# <d|s> class, subclass of OEint
+# [d|s] class, subclass of OEint
 class DSint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -234,7 +237,7 @@ class DSint(OEint):
             self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
 
 
-# <s|d> class, subclass of OEint
+# [s|d] class, subclass of OEint
 class SDint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -288,7 +291,7 @@ class SDint(OEint):
             self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
 
 
-# <d|p> class, subclass of OEint
+# [d|p] class, subclass of OEint
 class DPint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -348,7 +351,7 @@ class DPint(OEint):
 
 
 
-# <p|d> class, subclass of OEint
+# [p|d] class, subclass of OEint
 class PDint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -406,7 +409,7 @@ class PDint(OEint):
                 self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
 
 
-# <d|d> class, subclass of OEint
+# [d|d] class, subclass of OEint
 class DDint(OEint):
     def gen_int(self):
         # write code paths for integrals. Note that we use C++ classes here.
@@ -486,38 +489,38 @@ def write_oei():
     OEint.fhdr= open('gpu_oei_drivers.h','w')
 
     # generate integral classes for systems containing only s, p and d functions.
-    # generate <s|s>, this is trivial and we will directly save the integral value from the driver. 
+    # generate [s|s], this is trivial and we will directly save the integral value from the driver. 
     ss=SSint()
 
-    # generate <p|s>
+    # generate [p|s]
     ps=PSint(2)
     ps.gen_int() 
 
-    # generate <s|p>
+    # generate [s|p]
     sp=SPint(2)
     sp.gen_int()
 
-    # generate <p|p>
+    # generate [p|p]
     pp=PPint(1)
     pp.gen_int()
 
-    # generate <d|s>
+    # generate [d|s]
     ds=DSint(1)
     ds.gen_int()
 
-    # generate <s|d>
+    # generate [s|d]
     sd=SDint(1)
     sd.gen_int() 
 
-    # generate <d|p>
+    # generate [d|p]
     dp=DPint(1)
     dp.gen_int()
 
-    # generate <p|d>
+    # generate [p|d]
     pd=PDint(0)
     pd.gen_int()
 
-    # generate <d|d>
+    # generate [d|d]
     dd=DDint(0)
     dd.gen_int()
 
