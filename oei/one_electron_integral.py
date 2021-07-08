@@ -51,7 +51,7 @@ class PSint(OEint):
                     self.fhc.write("\n/* PS auxilary integral, m=%d */ \n" % (m))
                     self.fhd.write("\n/* PS auxilary integral, m=%d */ \n" % (m))  
 
-                self.fhc.write("class PSint_%d { \n" % (m))
+                self.fhc.write("class PSint_%d{ \n" % (m))
                 self.fhc.write("public: \n")
 
                 # set labels for improving readability 
@@ -84,7 +84,7 @@ class SPint(OEint):
                     self.fhc.write("\n/* SP auxilary integral, m=%d */ \n" % (m))
                     self.fhd.write("\n/* SP auxilary integral, m=%d */ \n" % (m))                
 
-                self.fhc.write("class SPint_%d { \n" % (m))
+                self.fhc.write("class SPint_%d{ \n" % (m))
                 self.fhc.write("public: \n")
 
                 # set labels for improving readability 
@@ -118,7 +118,7 @@ class PPint(OEint):
                 self.fhc.write("\n/* PP auxilary integral, m=%d */ \n" % (m))
                 self.fhd.write("\n/* PP auxilary integral, m=%d */ \n" % (m))          
         
-            self.fhc.write("class PPint_%d { \n" % (m))
+            self.fhc.write("class PPint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
             # set labels for improving readability 
@@ -163,7 +163,7 @@ class DSint(OEint):
                 self.fhc.write("\n/* DS auxilary integral, m=%d */ \n" % (m))
                 self.fhd.write("\n/* DS auxilary integral, m=%d */ \n" % (m))              
 
-            self.fhc.write("class DSint_%d { \n" % (m))
+            self.fhc.write("class DSint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
             # set labels for improving readability 
@@ -210,7 +210,7 @@ class SDint(OEint):
                 self.fhc.write("\n/* SD auxilary integral, m=%d */ \n" % (m))
                 self.fhd.write("\n/* SD auxilary integral, m=%d */ \n" % (m))              
 
-            self.fhc.write("class SDint_%d { \n" % (m))
+            self.fhc.write("class SDint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
             # set labels for improving readability 
@@ -257,7 +257,7 @@ class DPint(OEint):
                 self.fhc.write("\n/* DP auxilary integral, m=%d */ \n" % (m))
                 self.fhd.write("\n/* DP auxilary integral, m=%d */ \n" % (m))              
 
-            self.fhc.write("class DPint_%d { \n" % (m))
+            self.fhc.write("class DPint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
             # set labels for improving readability 
@@ -297,6 +297,56 @@ class DPint(OEint):
 
 
 
+# <p|d> class, subclass of OEint
+class PDint(OEint):
+    def gen_int(self):
+        # write code paths for integrals. Note that we use C++ classes here.
+        for m in range(0,self.max_m+1):
+            if m == 0:
+                self.fhc.write("\n/* PD true integral, m=%d */ \n" % (m)) 
+                self.fhd.write("\n/* PD true integral, m=%d */ \n" % (m)) 
+            else:
+                self.fhc.write("\n/* PD auxilary integral, m=%d */ \n" % (m))
+                self.fhd.write("\n/* PD auxilary integral, m=%d */ \n" % (m))              
+
+            self.fhc.write("class PDint_%d{ \n" % (m))
+            self.fhc.write("public: \n")
+
+            # set labels for improving readability 
+            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
+            lbl2=["Px", "Py", "Pz"]
+
+            # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
+            for i in range(0,6):
+                for j in range(0,3):
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (j+1, i+4, lbl2[j], lbl[i]))
+
+            # write class functions
+            self.fhc.write("  __device__ __inline__ PDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("}; \n")
+
+            # write function definitions
+            self.fhd.write("__device__ __inline__ PDint_%d::PDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
+            self.fhd.write("  SDint sd_%d(AA, CC, PP); // construct [s|d] for m=%d \n" % (m, m))
+            self.fhd.write("  SDint sd_%d(AA, CC, PP); // construct [s|d] for m=%d \n" % (m+1, m+1))
+
+            for i in range(0,6):
+                for j in range(0,3):
+                    tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
+                    for k in range(0,3):
+                        if params.Mcal[j+1][k] != 0:
+                            self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * sd_%d.x_%d_%d - (PP[%d]-CC[%d]) * sd_%d.x_%d_%d \n" % (j+1, i+4, k, k, m, 0, i+4,\
+                            k, k, m+1, 0, i+4))
+
+
+                            if tmp_mcal[k] != 0:
+                                tmp_mcal[k] -= 1
+                                tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
+                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (sd_%d.x_%d_%d - sd_%d.x_%d_%d) \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
+                            break
+            self.fhd.write("\n } \n")
+
+
 
 def write_oei():
 
@@ -312,7 +362,7 @@ def write_oei():
     ps.gen_int() 
 
     # generate <s|p>
-    sp=SPint(0)
+    sp=SPint(2)
     sp.gen_int()
 
     # generate <p|p>
@@ -324,12 +374,16 @@ def write_oei():
     ds.gen_int()
 
     # generate <s|d>
-    sd=SDint()
+    sd=SDint(1)
     sd.gen_int() 
 
     # generate <d|p>
     dp=DPint(0)
     dp.gen_int()
+
+    # generate <p|d>
+    pd=PDint(0)
+    pd.gen_int()
 
     OEint.fhc.close()
     OEint.fhd.close()
