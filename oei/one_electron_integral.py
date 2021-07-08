@@ -48,7 +48,9 @@ class SSint(OEint):
     # generate code to save computed [s|s] integral
     def save_int(self):
         self.fhdr.write("\n  /* SS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) = LOCVY(0, 0, 0);\n")
+        self.fhdr.write("  if(I == 0 && J == 0){ \n")
+        self.fhdr.write("    LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) = LOCVY(0, 0, 0);\n")
+        self.fhdr.write("  } \n")
 
 # [p|s] class, a subclass of OEint
 class PSint(OEint):
@@ -85,9 +87,11 @@ class PSint(OEint):
     # generate code to save computed [p|s] integral
     def save_int(self):
         self.fhdr.write("\n  /* PS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  PSint_0 ps(AA, CC, PP); \n")
+        self.fhdr.write("  if(I == 1 && J == 0){ \n")
+        self.fhdr.write("    PSint_0 ps(AA, CC, PP); \n")
         for i in range(0,3):                
-            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
+            self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
+        self.fhdr.write("  } \n")
 
 # [s|p] class, a subclass of OEint
 class SPint(OEint):
@@ -125,10 +129,11 @@ class SPint(OEint):
     # generate code to save computed [s|p] integral
     def save_int(self):
         self.fhdr.write("\n  /* SP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  SPint_0 sp(BB, CC, PP); \n")
+        self.fhdr.write("  if(I == 0 && J == 1){ \n")
+        self.fhdr.write("    SPint_0 sp(BB, CC, PP); \n")
         for i in range(0,3):                
-            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
-
+            self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
+        self.fhdr.write("  } \n")
 
 # [p|p] class, subclass of OEint
 class PPint(OEint):
@@ -177,11 +182,12 @@ class PPint(OEint):
     # generate code to save computed [p|p] integral
     def save_int(self):
         self.fhdr.write("\n  /* PP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  PPint_0 pp(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 1 && J == 1){ \n")
+        self.fhdr.write("    PPint_0 pp(BB, CC, PP, ABCD); \n")
         for i in range(0,3):
             for j in range(0,3):
-                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
-
+                self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
+        self.fhdr.write("  } \n")
 
 # [d|s] class, subclass of OEint
 class DSint(OEint):
@@ -232,10 +238,11 @@ class DSint(OEint):
     # generate code to save computed [d|s] integral
     def save_int(self):
         self.fhdr.write("\n  /* DS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  DSint_0 ds(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 2 && J == 0){ \n")
+        self.fhdr.write("    DSint_0 ds(AA, CC, PP, ABCD); \n")
         for i in range(0,6):
-            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
-
+            self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
+        self.fhdr.write("  } \n")
 
 # [s|d] class, subclass of OEint
 class SDint(OEint):
@@ -286,10 +293,11 @@ class SDint(OEint):
     # generate code to save computed [s|d] integral
     def save_int(self):
         self.fhdr.write("\n  /* SD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  SDint_0 sd(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 0 && J == 2){ \n")
+        self.fhdr.write("    SDint_0 sd(AA, CC, PP, ABCD); \n")
         for i in range(0,6):
-            self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
-
+            self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
+        self.fhdr.write("  } \n")
 
 # [d|p] class, subclass of OEint
 class DPint(OEint):
@@ -344,11 +352,12 @@ class DPint(OEint):
     # generate code to save computed [d|p] integral
     def save_int(self):
         self.fhdr.write("\n  /* DP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  DPint_0 dp(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 2 && J == 1){ \n")
+        self.fhdr.write("    DPint_0 dp(BB, CC, PP, ABCD); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
-
+                self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
+        self.fhdr.write("  } \n")
 
 
 # [p|d] class, subclass of OEint
@@ -403,10 +412,12 @@ class PDint(OEint):
     # generate code to save computed [p|d] integral
     def save_int(self):
         self.fhdr.write("\n  /* PD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  PDint_0 pd(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 1 && J == 2){ \n")
+        self.fhdr.write("    PDint_0 pd(AA, CC, PP, ABCD); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+                self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+        self.fhdr.write("  } \n")
 
 
 # [d|d] class, subclass of OEint
@@ -475,11 +486,12 @@ class DDint(OEint):
     # generate code to save computed [d|d] integral
     def save_int(self):
         self.fhdr.write("\n  /* DD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  DDint_0 dd(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("  if(I == 2 && J == 2){ \n")
+        self.fhdr.write("    DDint_0 dd(BB, CC, PP, ABCD); \n")
         for i in range(0,6):
             for j in range(0,6):
-                self.fhdr.write("  LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
-
+                self.fhdr.write("    LOCSTORE(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
+        self.fhdr.write("  } \n")
 
 def write_oei():
 
@@ -525,7 +537,7 @@ def write_oei():
     dd.gen_int()
 
     # write driver to use classes and save computed primitive integrals
-    OEint.fhdr.write("__device__ __inline__ OEint_vertical(QUICKDouble* AA, QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n")
+    OEint.fhdr.write("__device__ __inline__ OEint_vertical(int I, int J, QUICKDouble* AA, QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n")
     ss.save_int()
     ps.save_int()
     sp.save_int()
