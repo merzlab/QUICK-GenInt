@@ -18,13 +18,14 @@
 #!---------------------------------------------------------------------!
 
 import params
+import file_handler
 
 # parent class for all one electron integrals
 class OEint:
     # set file handlers
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
-    fhdr= 0 # file handler for driver implementations
+    fha= 0  # file handler for integral assembler
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
@@ -60,10 +61,10 @@ class SSint(OEint):
 
     # generate code to save computed [s|s] integral
     def save_int(self):
-        self.fhdr.write("\n  /* SS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 0 && J == 0){ \n")
-        self.fhdr.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) = VY(0, 0, 0);\n")
-        self.fhdr.write("  } \n")
+        self.fha.write("\n  /* SS integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 0 && J == 0){ \n")
+        self.fha.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) = VY(0, 0, 0);\n")
+        self.fha.write("  } \n")
 
 # [p|s] class, a subclass of OEint
 class PSint(OEint):
@@ -80,19 +81,16 @@ class PSint(OEint):
             self.fhc.write("class PSint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Px", "Py", "Pz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,3):
-                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, lbl[i], "S"))
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, self.p_lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\
+            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
                 QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\
+            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
                 QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             for i in range(0,3):
                 self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (i+1, 0, self.PA[i], m, self.PC[i], m))
@@ -101,12 +99,12 @@ class PSint(OEint):
 
     # generate code to save computed [p|s] integral
     def save_int(self):
-        self.fhdr.write("\n  /* PS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 1 && J == 0){ \n")
-        self.fhdr.write("    PSint_0 ps(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); \n")
+        self.fha.write("\n  /* PS integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 1 && J == 0){ \n")
+        self.fha.write("    PSint_0 ps(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
-            self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
-        self.fhdr.write("  } \n")
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
+        self.fha.write("  } \n")
 
 # [s|p] class, a subclass of OEint
 class SPint(OEint):
@@ -123,32 +121,31 @@ class SPint(OEint):
             self.fhc.write("class SPint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Px", "Py", "Pz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,3):
-                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", lbl[i]))
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", self.p_lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp); \n" % (m))
+            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
 
             for i in range(0,3):
-                self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * VY(0, 0, %d) - (PP[%d]-CC[%d]) * VY(0, 0, %d);\n" % (0, i+1, i, i, m, i, i, m))
+                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (0, i+1, self.PB[i], m, self.PC[i], m))
 
             self.fhd.write("} \n\n") 
 
     # generate code to save computed [s|p] integral
     def save_int(self):
-        self.fhdr.write("\n  /* SP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 0 && J == 1){ \n")
-        self.fhdr.write("    SPint_0 sp(BB, CC, PP, YVerticalTemp); \n")
+        self.fha.write("\n  /* SP integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 0 && J == 1){ \n")
+        self.fha.write("    SPint_0 sp(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
-            self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
-        self.fhdr.write("  } \n")
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
+        self.fha.write("  } \n")
 
 # [p|p] class, subclass of OEint
 class PPint(OEint):
@@ -165,44 +162,45 @@ class PPint(OEint):
             self.fhc.write("class PPint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Px", "Py", "Pz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,3):
                 for j in range(0,3):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, j+1, lbl[i], lbl[j]))
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, j+1, self.p_lbl[i], self.p_lbl[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             idx=1
             for i in range(0,3):
                 for j in range(0,3):
-                    self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d; \n" % (i+1, j+1, j, j, m, i+1, 0,\
-                    j, j, m+1, i+1, 0))
+                    self.fhd.write("  x_%d_%d = %s * ps_%d.x_%d_%d - %s * ps_%d.x_%d_%d; \n" % (i+1, j+1, self.PB[j], m, i+1, 0,\
+                    self.PC[j], m+1, i+1, 0))
 
                     if i == j:
-                        self.fhd.write("  x_%d_%d += 0.5/ABCD * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (i+1, j+1, m, m+1))
+                        self.fhd.write("  x_%d_%d += 0.5/Zeta * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (i+1, j+1, m, m+1))
 
                     idx += 1
             self.fhd.write("\n } \n")
 
     # generate code to save computed [p|p] integral
     def save_int(self):
-        self.fhdr.write("\n  /* PP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 1 && J == 1){ \n")
-        self.fhdr.write("    PPint_0 pp(BB, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* PP integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 1 && J == 1){ \n")
+        self.fha.write("    PPint_0 pp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,3):
             for j in range(0,3):
-                self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
-        self.fhdr.write("  } \n")
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
+        self.fha.write("  } \n")
 
 # [d|s] class, subclass of OEint
 class DSint(OEint):
@@ -219,19 +217,18 @@ class DSint(OEint):
             self.fhc.write("class DSint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,6):
-                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, 0, lbl[i], "S"))
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, 0, self.d_lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
@@ -241,23 +238,23 @@ class DSint(OEint):
                     if params.Mcal[i+4][j] != 0:
                         tmp_mcal[j] -= 1
                         tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                        self.fhd.write("  x_%d_%d = (PP[%d]-AA[%d]) * ps_%d.x_%d_%d - (PP[%d]-CC[%d]) * ps_%d.x_%d_%d; \n" % (i+4, 0, j, j, m, tmp_i-1, 0,\
-                        j, j, m+1, tmp_i-1, 0))
+                        self.fhd.write("  x_%d_%d = %s * ps_%d.x_%d_%d - %s * ps_%d.x_%d_%d; \n" % (i+4, 0, self.PA[j], m, tmp_i-1, 0,\
+                        self.PC[j], m+1, tmp_i-1, 0))
 
                         if params.Mcal[i+4][j] == 2:
-                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (i+4, 0, m, m+1))
+                            self.fhd.write("  x_%d_%d += 0.5/Zeta * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (i+4, 0, m, m+1))
 
                         break
             self.fhd.write("\n } \n")
 
     # generate code to save computed [d|s] integral
     def save_int(self):
-        self.fhdr.write("\n  /* DS integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 2 && J == 0){ \n")
-        self.fhdr.write("    DSint_0 ds(AA, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* DS integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 2 && J == 0){ \n")
+        self.fha.write("    DSint_0 ds(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
-            self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
-        self.fhdr.write("  } \n")
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
+        self.fha.write("  } \n")
 
 # [s|d] class, subclass of OEint
 class SDint(OEint):
@@ -274,21 +271,20 @@ class SDint(OEint):
             self.fhc.write("class SDint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,6):
-                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+4, "S", lbl[i]))
+                self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+4, "S", self.d_lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ SDint_%d::SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ SDint_%d::SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
@@ -296,23 +292,23 @@ class SDint(OEint):
                     if params.Mcal[i+4][j] != 0:
                         tmp_mcal[j] -= 1
                         tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                        self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * sp_%d.x_%d_%d - (PP[%d]-CC[%d]) * sp_%d.x_%d_%d; \n" % (0, i+4, j, j, m, 0, tmp_i-1,\
-                        j, j, m+1, 0, tmp_i-1))
+                        self.fhd.write("  x_%d_%d = %s * sp_%d.x_%d_%d - %s * sp_%d.x_%d_%d; \n" % (0, i+4, self.PB[j], m, 0, tmp_i-1,\
+                        self.PC[j], m+1, 0, tmp_i-1))
 
                         if params.Mcal[i+4][j] == 2:
-                            self.fhd.write("  x_%d_%d += 0.5/ABCD * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (0, i+4, m, m+1))
+                            self.fhd.write("  x_%d_%d += 0.5/Zeta * (VY(0, 0, %d) - VY(0, 0, %d)); \n" % (0, i+4, m, m+1))
 
                         break
             self.fhd.write("\n } \n")
 
     # generate code to save computed [s|d] integral
     def save_int(self):
-        self.fhdr.write("\n  /* SD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 0 && J == 2){ \n")
-        self.fhdr.write("    SDint_0 sd(AA, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* SD integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 0 && J == 2){ \n")
+        self.fha.write("    SDint_0 sd(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
-            self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
-        self.fhdr.write("  } \n")
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
+        self.fha.write("  } \n")
 
 # [d|p] class, subclass of OEint
 class DPint(OEint):
@@ -329,52 +325,52 @@ class DPint(OEint):
             self.fhc.write("class DPint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
-            lbl2=["Px", "Py", "Pz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,6):
                 for j in range(0,3):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+1, lbl[i], lbl2[j]))
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+1, self.d_lbl[i], self.p_lbl[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DPint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DPint_%d::DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ DPint_%d::DPint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
             self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))            
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))            
+            self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 for j in range(0,3):
                     tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
                     for k in range(0,3):
                         if params.Mcal[j+1][k] != 0:
-                            self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * ds_%d.x_%d_%d - (PP[%d]-CC[%d]) * ds_%d.x_%d_%d; \n" % (i+4, j+1, k, k, m, i+4, 0,\
-                            k, k, m+1, i+4, 0))
+                            self.fhd.write("  x_%d_%d = %s * ds_%d.x_%d_%d - %s * ds_%d.x_%d_%d; \n" % (i+4, j+1, self.PB[k], m, i+4, 0,\
+                            self.PC[k], m+1, i+4, 0))
 
 
                             if tmp_mcal[k] != 0:
                                 tmp_mcal[k] -= 1
                                 tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (ps_%d.x_%d_%d - ps_%d.x_%d_%d); \n" % (i+4, j+1, params.Mcal[i+4][k], m, tmp_i-1, 0, m+1, tmp_i-1, 0))
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (ps_%d.x_%d_%d - ps_%d.x_%d_%d); \n" % (i+4, j+1, params.Mcal[i+4][k], m, tmp_i-1, 0, m+1, tmp_i-1, 0))
 
                             break
             self.fhd.write("\n } \n")
 
     # generate code to save computed [d|p] integral
     def save_int(self):
-        self.fhdr.write("\n  /* DP integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 2 && J == 1){ \n")
-        self.fhdr.write("    DPint_0 dp(BB, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* DP integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 2 && J == 1){ \n")
+        self.fha.write("    DPint_0 dp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
-        self.fhdr.write("  } \n")
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
+        self.fha.write("  } \n")
 
 
 # [p|d] class, subclass of OEint
@@ -392,51 +388,51 @@ class PDint(OEint):
             self.fhc.write("class PDint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
-            lbl2=["Px", "Py", "Pz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,6):
                 for j in range(0,3):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (j+1, i+4, lbl2[j], lbl[i]))
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (j+1, i+4, self.p_lbl[j], self.d_lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ PDint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ PDint_%d::PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD, YVerticalTemp); // construct [s|d] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD, YVerticalTemp); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ PDint_%d::PDint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  SDint_%d sd_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SDint_%d sd_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 for j in range(0,3):
                     tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
                     for k in range(0,3):
                         if params.Mcal[j+1][k] != 0:
-                            self.fhd.write("  x_%d_%d = (PP[%d]-AA[%d]) * sd_%d.x_%d_%d - (PP[%d]-CC[%d]) * sd_%d.x_%d_%d; \n" % (j+1, i+4, k, k, m, 0, i+4,\
-                            k, k, m+1, 0, i+4))
+                            self.fhd.write("  x_%d_%d = %s * sd_%d.x_%d_%d - %s * sd_%d.x_%d_%d; \n" % (j+1, i+4, self.PA[k], m, 0, i+4,\
+                            self.PC[k], m+1, 0, i+4))
 
 
                             if tmp_mcal[k] != 0:
                                 tmp_mcal[k] -= 1
                                 tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
-                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (sp_%d.x_%d_%d - sp_%d.x_%d_%d); \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (sp_%d.x_%d_%d - sp_%d.x_%d_%d); \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
                             break
             self.fhd.write("\n } \n")
 
     # generate code to save computed [p|d] integral
     def save_int(self):
-        self.fhdr.write("\n  /* PD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 1 && J == 2){ \n")
-        self.fhdr.write("    PDint_0 pd(AA, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* PD integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 1 && J == 2){ \n")
+        self.fha.write("    PDint_0 pd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
-        self.fhdr.write("  } \n")
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+        self.fha.write("  } \n")
 
 
 # [d|d] class, subclass of OEint
@@ -454,26 +450,27 @@ class DDint(OEint):
             self.fhc.write("class DDint_%d{ \n" % (m))
             self.fhc.write("public: \n")
 
-            # set labels for improving readability 
-            lbl=["Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz"]
-
             # write class variables; convention being used is s=0, p=1-3, d=4-9, f=10-19, g=20-34
             for i in range(0,6):
                 for j in range(0,6):
-                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+4, lbl[i], lbl[j]))
+                    self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+4, self.d_lbl[i], self.d_lbl[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DDint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DDint_%d::DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [p|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|p] for m=%d \n" % (m, m, m))            
-            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [p|p] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|p] for m=%d \n\n" % (m+1, m+1, m+1))             
+            self.fhd.write("__device__ __inline__ DDint_%d::DDint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,\n\
+                QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  PPint_%d pp_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  DPint_%d dp_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|p] for m=%d \n" % (m, m, m))            
+            self.fhd.write("  PPint_%d pp_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|p] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  DPint_%d dp_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|p] for m=%d \n\n" % (m+1, m+1, m+1))             
 
             for i in range(0,6):
                 for j in range(0,6):
@@ -485,39 +482,44 @@ class DDint(OEint):
                             tmp_j=params.trans[tmp_mcal2[0]][tmp_mcal2[1]][tmp_mcal2[2]]
 
                             iclass_obj="dp"
-                            self.fhd.write("  x_%d_%d = (PP[%d]-BB[%d]) * %s_%d.x_%d_%d - (PP[%d]-CC[%d]) * %s_%d.x_%d_%d; \n" % (j+4, i+4, k, k, iclass_obj, m, i+4, tmp_j-1,\
-                            k, k, iclass_obj, m+1, i+4, tmp_j-1))
+                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (j+4, i+4, self.PB[k], iclass_obj, m, i+4, tmp_j-1,\
+                            self.PC[k], iclass_obj, m+1, i+4, tmp_j-1))
 
                             if params.Mcal[j+4][k] > 0:
                                 iclass_obj="ds"
-                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[j+4][k], iclass_obj, m, i+4, 0, \
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[j+4][k], iclass_obj, m, i+4, 0, \
                                 iclass_obj, m+1, i+4, 0))
 
                             if tmp_mcal1[k] > 0:
                                 tmp_mcal1[k] -= 1
                                 tmp_i=params.trans[tmp_mcal1[0]][tmp_mcal1[1]][tmp_mcal1[2]]
                                 iclass_obj="pp"
-                                self.fhd.write("  x_%d_%d += 0.5/ABCD * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[i+4][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[i+4][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
                                 iclass_obj, m+1, tmp_i-1, tmp_j-1))
                             break
             self.fhd.write("\n } \n")
 
     # generate code to save computed [d|d] integral
     def save_int(self):
-        self.fhdr.write("\n  /* DD integral, m=%d */ \n" % (0))
-        self.fhdr.write("  if(I == 2 && J == 2){ \n")
-        self.fhdr.write("    DDint_0 dd(BB, CC, PP, ABCD, YVerticalTemp); \n")
+        self.fha.write("\n  /* DD integral, m=%d */ \n" % (0))
+        self.fha.write("  if(I == 2 && J == 2){ \n")
+        self.fha.write("    DDint_0 dd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,6):
-                self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
-        self.fhdr.write("  } \n")
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
+        self.fha.write("  } \n")
 
 def write_oei():
 
     # set files
     OEint.fhc = open('gpu_oei_classes.h','w')
     OEint.fhd = open('gpu_oei_definitions.h','w')
-    OEint.fhdr= open('gpu_oei_drivers.h','w')
+    OEint.fha= open('gpu_oei_assembler.h','w')
+
+    # write license info
+    file_handler.write_license(OEint.fhc)
+    file_handler.write_license(OEint.fhd)
+    file_handler.write_license(OEint.fha)
 
     # generate integral classes for systems containing only s, p and d functions.
     # generate [s|s], this is trivial and we will directly save the integral value from the driver. 
@@ -556,7 +558,8 @@ def write_oei():
     dd.gen_int()
 
     # write driver to use classes and save computed primitive integrals
-    OEint.fhdr.write("__device__ __inline__ void OEint_vertical(int I, int J, QUICKDouble* AA, QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, \
+    OEint.fha.write("__device__ __inline__ void OEint_vertical(int I, int J, QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
         QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
     ss.save_int()
     ps.save_int()
@@ -567,10 +570,10 @@ def write_oei():
     dp.save_int()
     pd.save_int()
     dd.save_int()
-    OEint.fhdr.write("\n } \n")
+    OEint.fha.write("\n } \n")
 
     OEint.fhc.close()
     OEint.fhd.close()
-    OEint.fhdr.close()
+    OEint.fha.close()
 
 write_oei()
