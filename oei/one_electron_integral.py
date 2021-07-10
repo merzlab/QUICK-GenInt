@@ -13,8 +13,8 @@
 #! This source file contains classes necessary for generating one      !
 #! electron integrals. Note that we use vertical recurrence relations  !
 #! algorithm developed by Obara and Saika. See J. Chem. Phys. 1986, 84,!
-#! 3963−3974 and J. Chem. Phys. 1988, 89, 5777−5786 papers for theore- !
-#! tical details.                                                      !
+#! 3963−3974 paper for theoretical details.                            !
+#!                                                                     !
 #!---------------------------------------------------------------------!
 
 import params
@@ -33,6 +33,19 @@ class OEint:
         self.max_m=max_m
         if self.fhc == 0 or self.fhd == 0:
             print("Warning: file handlers in OEint class are not set. \n")
+        
+        # set orbital labels for improving readability 
+        self.p_lbl=("Px", "Py", "Pz")
+        self.d_lbl=("Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz")
+
+        # set labels for useful variables
+        self.AA=("Ax", "Ay", "Az") # position of center A
+        self.BB=("Bx", "By", "Bz") # position of center B
+        self.CC=("Cx", "Cy", "Cz") # position of center C
+        self.PP=("Px", "Py", "Pz") # quantity P in OS eqn 15
+        self.PA=("PAx", "PAy", "PAz") # Px-Ax, Py-Ay, Pz-Az
+        self.PB=("PBx", "PBy", "PBz") # Px-Bx, Py-By, Pz-Bz
+        self.PC=("PCx", "PCy", "PCz") # Px-Cx, Py-Cy, Pz-Cz
 
     # generate source code for integrals
     def gen_int(self):
@@ -75,12 +88,14 @@ class PSint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp); \n" % (m))
+            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             for i in range(0,3):
-                self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * VY(0, 0, %d) - (PP[%d]-CC[%d]) * VY(0, 0, %d);\n" % (i+1, 0, i, i, m, i, i, m))
+                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (i+1, 0, self.PA[i], m, self.PC[i], m))
 
             self.fhd.write("} \n\n")
 
@@ -88,7 +103,7 @@ class PSint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* PS integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 1 && J == 0){ \n")
-        self.fhdr.write("    PSint_0 ps(AA, CC, PP, YVerticalTemp); \n")
+        self.fhdr.write("    PSint_0 ps(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
             self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
         self.fhdr.write("  } \n")
@@ -164,8 +179,8 @@ class PPint(OEint):
 
             # write function definitions
             self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             idx=1
             for i in range(0,3):
@@ -217,8 +232,8 @@ class DSint(OEint):
 
             # write function definitions
             self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
@@ -329,8 +344,8 @@ class DPint(OEint):
 
             # write function definitions
             self.fhd.write("__device__ __inline__ DPint_%d::DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [p|s] for m=%d \n" % (m+1, m+1, m+1))
             self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))            
             self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
