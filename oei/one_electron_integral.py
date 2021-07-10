@@ -75,10 +75,10 @@ class PSint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
+            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp); \n" % (m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             for i in range(0,3):
                 self.fhd.write("  x_%d_%d=(PP[%d]-AA[%d]) * VY(0, 0, %d) - (PP[%d]-CC[%d]) * VY(0, 0, %d);\n" % (i+1, 0, i, i, m, i, i, m))
 
@@ -88,7 +88,7 @@ class PSint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* PS integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 1 && J == 0){ \n")
-        self.fhdr.write("    PSint_0 ps(AA, CC, PP); \n")
+        self.fhdr.write("    PSint_0 ps(AA, CC, PP, YVerticalTemp); \n")
         for i in range(0,3):                
             self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
         self.fhdr.write("  } \n")
@@ -116,10 +116,10 @@ class SPint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP); \n" % (m))
+            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp); \n" % (m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP){ \n\n" % (m, m))
+            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
 
             for i in range(0,3):
                 self.fhd.write("  x_%d_%d=(PP[%d]-BB[%d]) * VY(0, 0, %d) - (PP[%d]-CC[%d]) * VY(0, 0, %d);\n" % (0, i+1, i, i, m, i, i, m))
@@ -130,7 +130,7 @@ class SPint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* SP integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 0 && J == 1){ \n")
-        self.fhdr.write("    SPint_0 sp(BB, CC, PP); \n")
+        self.fhdr.write("    SPint_0 sp(BB, CC, PP, YVerticalTemp); \n")
         for i in range(0,3):                
             self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
         self.fhdr.write("  } \n")
@@ -159,13 +159,13 @@ class PPint(OEint):
                     self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, j+1, lbl[i], lbl[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ PPint_%d::PPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             idx=1
             for i in range(0,3):
@@ -183,7 +183,7 @@ class PPint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* PP integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 1 && J == 1){ \n")
-        self.fhdr.write("    PPint_0 pp(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("    PPint_0 pp(BB, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,3):
             for j in range(0,3):
                 self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
@@ -212,13 +212,13 @@ class DSint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, 0, lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ DSint_%d::DSint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(AA, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
@@ -239,7 +239,7 @@ class DSint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* DS integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 2 && J == 0){ \n")
-        self.fhdr.write("    DSint_0 ds(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("    DSint_0 ds(AA, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,6):
             self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
         self.fhdr.write("  } \n")
@@ -267,13 +267,13 @@ class SDint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+4, "S", lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ SDint_%d::SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP); // construct [s|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP); // construct [s|p] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ SDint_%d::SDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SPint_%d sp_%d(BB, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
@@ -294,7 +294,7 @@ class SDint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* SD integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 0 && J == 2){ \n")
-        self.fhdr.write("    SDint_0 sd(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("    SDint_0 sd(AA, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,6):
             self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
         self.fhdr.write("  } \n")
@@ -324,15 +324,15 @@ class DPint(OEint):
                     self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+1, lbl[i], lbl2[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DPint_%d::DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP); // construct [p|s] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD); // construct [d|s] for m=%d \n" % (m, m, m))            
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD); // construct [d|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ DPint_%d::DPint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  PSint_%d ps_%d(BB, CC, PP, YVerticalTemp); // construct [p|s] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))            
+            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 for j in range(0,3):
@@ -355,7 +355,7 @@ class DPint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* DP integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 2 && J == 1){ \n")
-        self.fhdr.write("    DPint_0 dp(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("    DPint_0 dp(BB, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
                 self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
@@ -387,15 +387,15 @@ class PDint(OEint):
                     self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (j+1, i+4, lbl2[j], lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ PDint_%d::PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP); // construct [s|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP); // construct [s|p] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD); // construct [s|d] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("__device__ __inline__ PDint_%d::PDint_%d(QUICKDouble* AA, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SPint_%d sp_%d(AA, CC, PP, YVerticalTemp); // construct [s|p] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD, YVerticalTemp); // construct [s|d] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SDint_%d sd_%d(AA, CC, PP, ABCD, YVerticalTemp); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 for j in range(0,3):
@@ -417,7 +417,7 @@ class PDint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* PD integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 1 && J == 2){ \n")
-        self.fhdr.write("    PDint_0 pd(AA, CC, PP, ABCD); \n")
+        self.fhdr.write("    PDint_0 pd(AA, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
                 self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
@@ -448,17 +448,17 @@ class DDint(OEint):
                     self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+4, j+4, lbl[i], lbl[j]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD); \n" % (m))          
+            self.fhc.write("  __device__ __inline__ DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp); \n" % (m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ DDint_%d::DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD){ \n\n" % (m, m))
-            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD); // construct [p|p] for m=%d \n" % (m, m, m))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD); // construct [d|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD); // construct [d|p] for m=%d \n" % (m, m, m))            
-            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD); // construct [p|p] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD); // construct [d|s] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD); // construct [d|p] for m=%d \n\n" % (m+1, m+1, m+1))             
+            self.fhd.write("__device__ __inline__ DDint_%d::DDint_%d(QUICKDouble* BB, QUICKDouble* CC, QUICKDouble* PP, QUICKDouble ABCD, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [p|p] for m=%d \n" % (m, m, m))
+            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|p] for m=%d \n" % (m, m, m))            
+            self.fhd.write("  PPint_%d pp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [p|p] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  DSint_%d ds_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|s] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  DPint_%d dp_%d(BB, CC, PP, ABCD, YVerticalTemp); // construct [d|p] for m=%d \n\n" % (m+1, m+1, m+1))             
 
             for i in range(0,6):
                 for j in range(0,6):
@@ -491,7 +491,7 @@ class DDint(OEint):
     def save_int(self):
         self.fhdr.write("\n  /* DD integral, m=%d */ \n" % (0))
         self.fhdr.write("  if(I == 2 && J == 2){ \n")
-        self.fhdr.write("    DDint_0 dd(BB, CC, PP, ABCD); \n")
+        self.fhdr.write("    DDint_0 dd(BB, CC, PP, ABCD, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,6):
                 self.fhdr.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
