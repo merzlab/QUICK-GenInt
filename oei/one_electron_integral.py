@@ -26,6 +26,7 @@ class OEint:
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
     fha= 0  # file handler for integral assembler
+    debug=1 # include debug info in generated code, 0=no, 1=yes 
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
@@ -64,6 +65,13 @@ class SSint(OEint):
         self.fha.write("\n  /* SS integral, m=%d */ \n" % (0))
         self.fha.write("  if(I == 0 && J == 0){ \n")
         self.fha.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) = VY(0, 0, 0);\n")
+
+        # include print statements if debug option is on 
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, 0, 0, STOREDIM, STOREDIM)); \n" % ( "SS", 0, 0))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [p|s] class, a subclass of OEint
@@ -93,7 +101,7 @@ class PSint(OEint):
             self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
                 QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             for i in range(0,3):
-                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (i+1, 0, self.PA[i], m, self.PC[i], m))
+                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (i+1, 0, self.PA[i], m, self.PC[i], m+1))
 
             self.fhd.write("} \n\n")
 
@@ -104,6 +112,14 @@ class PSint(OEint):
         self.fha.write("    PSint_0 ps(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
             self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
+
+        # include print statements if debug option is on 
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,3):
+                self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PS", i+1, 0, i+1, 0))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [s|p] class, a subclass of OEint
@@ -134,7 +150,7 @@ class SPint(OEint):
                 QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
 
             for i in range(0,3):
-                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (0, i+1, self.PB[i], m, self.PC[i], m))
+                self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (0, i+1, self.PB[i], m, self.PC[i], m+1))
 
             self.fhd.write("} \n\n") 
 
@@ -145,6 +161,14 @@ class SPint(OEint):
         self.fha.write("    SPint_0 sp(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
             self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,3):
+                self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SP", 0, i+1, 0, i+1))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [p|p] class, subclass of OEint
@@ -200,6 +224,15 @@ class PPint(OEint):
         for i in range(0,3):
             for j in range(0,3):
                 self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,3):
+                for j in range(0,3):
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PP", i+1, j+1, i+1, j+1))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [d|s] class, subclass of OEint
@@ -254,6 +287,14 @@ class DSint(OEint):
         self.fha.write("    DSint_0 ds(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,6):
+                self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DS", i+4, 0, i+4, 0))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [s|d] class, subclass of OEint
@@ -308,6 +349,14 @@ class SDint(OEint):
         self.fha.write("    SDint_0 sd(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,6):
+                self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SD", 0, i+4, 0, i+4))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 # [d|p] class, subclass of OEint
@@ -370,6 +419,15 @@ class DPint(OEint):
         for i in range(0,6):
             for j in range(0,3):
                 self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,6):
+                for j in range(0,3):
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DP", i+4, j+1, i+4, j+1))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 
@@ -405,22 +463,35 @@ class PDint(OEint):
                 QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
             self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  SDint_%d sd_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n" % (m, m, m))
-            self.fhd.write("  SDint_%d sd_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("  SDint_%d sd_%d(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n" % (m, m, m))
+            self.fhd.write("  SDint_%d sd_%d(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|d] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,6):
                 for j in range(0,3):
                     tmp_mcal=[params.Mcal[i+4][0], params.Mcal[i+4][1], params.Mcal[i+4][2]]
+                    
                     for k in range(0,3):
+                        #self.fhd.write("a(i,j) %d %d %d %d %d\n" % (tmp_mcal[0], tmp_mcal[1], tmp_mcal[2], params.Mcal[j+1][k], tmp_mcal[k]))
                         if params.Mcal[j+1][k] != 0:
                             self.fhd.write("  x_%d_%d = %s * sd_%d.x_%d_%d - %s * sd_%d.x_%d_%d; \n" % (j+1, i+4, self.PA[k], m, 0, i+4,\
                             self.PC[k], m+1, 0, i+4))
 
+                            #self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f \\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d); \n" \
+                            #% ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4))
 
-                            if tmp_mcal[k] != 0:
+                            if tmp_mcal[k] != 0:                                
                                 tmp_mcal[k] -= 1
                                 tmp_i=params.trans[tmp_mcal[0]][tmp_mcal[1]][tmp_mcal[2]]
                                 self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (sp_%d.x_%d_%d - sp_%d.x_%d_%d); \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
+
+                            # added only for debugging
+                            if tmp_mcal[k]+1 != 0:
+                                self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f, Zeta= %%f, sp_%d.x_%d_%d= %%f, sp_%d.x_%d_%d= %%f\\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d, Zeta, sp_%d.x_%d_%d, sp_%d.x_%d_%d); \n" \
+                                % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1))
+                            else:
+                                self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f \\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d); \n" \
+                                % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4))                                
+
                             break
             self.fhd.write("\n } \n")
 
@@ -432,6 +503,15 @@ class PDint(OEint):
         for i in range(0,6):
             for j in range(0,3):
                 self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,6):
+                for j in range(0,3):
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PD", j+1, i+4, j+1, i+4))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 
@@ -485,9 +565,9 @@ class DDint(OEint):
                             self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (j+4, i+4, self.PB[k], iclass_obj, m, i+4, tmp_j-1,\
                             self.PC[k], iclass_obj, m+1, i+4, tmp_j-1))
 
-                            if params.Mcal[j+4][k] > 0:
+                            if params.Mcal[j+4][k] > 1:
                                 iclass_obj="ds"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[j+4][k], iclass_obj, m, i+4, 0, \
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[j+4][k]-1, iclass_obj, m, i+4, 0, \
                                 iclass_obj, m+1, i+4, 0))
 
                             if tmp_mcal1[k] > 0:
@@ -507,6 +587,15 @@ class DDint(OEint):
         for i in range(0,6):
             for j in range(0,6):
                 self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
+
+        # include print statements if debug option is on    
+        if OEint.debug == 1:
+            self.fha.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,6):
+                for j in range(0,6):
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DD", j+4, i+4, j+4, i+4))
+            self.fha.write("#endif \n\n")
+
         self.fha.write("  } \n")
 
 def write_oei():
