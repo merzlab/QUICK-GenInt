@@ -26,7 +26,7 @@ class OEint:
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
     fha= 0  # file handler for integral assembler
-    debug=1 # include debug info in generated code, 0=no, 1=yes 
+    debug=0 # include debug info in generated code, 0=no, 1=yes 
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
@@ -64,7 +64,7 @@ class SSint(OEint):
     def save_int(self):
         self.fha.write("\n  /* SS integral, m=%d */ \n" % (0))
         self.fha.write("  if(I == 0 && J == 0){ \n")
-        self.fha.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) = VY(0, 0, 0);\n")
+        self.fha.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) += VY(0, 0, 0);\n")
 
         # include print statements if debug option is on 
         if OEint.debug == 1:
@@ -111,7 +111,7 @@ class PSint(OEint):
         self.fha.write("  if(I == 1 && J == 0){ \n")
         self.fha.write("    PSint_0 ps(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
-            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += ps.x_%d_%d;\n" % (i+1, 0, i+1, 0))
 
         # include print statements if debug option is on 
         if OEint.debug == 1:
@@ -160,7 +160,7 @@ class SPint(OEint):
         self.fha.write("  if(I == 0 && J == 1){ \n")
         self.fha.write("    SPint_0 sp(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); \n")
         for i in range(0,3):                
-            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -223,7 +223,7 @@ class PPint(OEint):
         self.fha.write("    PPint_0 pp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,3):
             for j in range(0,3):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -286,7 +286,7 @@ class DSint(OEint):
         self.fha.write("  if(I == 2 && J == 0){ \n")
         self.fha.write("    DSint_0 ds(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
-            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -348,7 +348,7 @@ class SDint(OEint):
         self.fha.write("  if(I == 0 && J == 2){ \n")
         self.fha.write("    SDint_0 sd(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
-            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
+            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -418,7 +418,7 @@ class DPint(OEint):
         self.fha.write("    DPint_0 dp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -485,12 +485,12 @@ class PDint(OEint):
                                 self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (sp_%d.x_%d_%d - sp_%d.x_%d_%d); \n" % (j+1, i+4, params.Mcal[i+4][k], m, 0, tmp_i-1, m+1, 0, tmp_i-1))
 
                             # added only for debugging
-                            if tmp_mcal[k]+1 != 0:
-                                self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f, Zeta= %%f, sp_%d.x_%d_%d= %%f, sp_%d.x_%d_%d= %%f\\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d, Zeta, sp_%d.x_%d_%d, sp_%d.x_%d_%d); \n" \
-                                % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1))
-                            else:
-                                self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f \\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d); \n" \
-                                % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4))                                
+                            #if tmp_mcal[k]+1 != 0:
+                            #    self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f, Zeta= %%f, sp_%d.x_%d_%d= %%f, sp_%d.x_%d_%d= %%f\\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d, Zeta, sp_%d.x_%d_%d, sp_%d.x_%d_%d); \n" \
+                            #    % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, m, 0, tmp_i-1, m+1, 0, tmp_i-1))
+                            #else:
+                            #    self.fhd.write("  printf(\" x_%d_%d: %s= %%f, sd_%d.x_%d_%d= %%f, %s= %%f, sd_%d.x_%d_%d= %%f \\n\", %s, sd_%d.x_%d_%d, %s, sd_%d.x_%d_%d); \n" \
+                            #    % ( j+1, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4, self.PA[k], m, 0, i+4, self.PC[k], m+1, 0, i+4))                                
 
                             break
             self.fhd.write("\n } \n")
@@ -502,7 +502,7 @@ class PDint(OEint):
         self.fha.write("    PDint_0 pd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,3):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -586,7 +586,7 @@ class DDint(OEint):
         self.fha.write("    DDint_0 dd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,6):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) = dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
@@ -647,7 +647,7 @@ def write_oei():
     dd.gen_int()
 
     # write driver to use classes and save computed primitive integrals
-    OEint.fha.write("__device__ __inline__ void OEint_vertical(int I, int J, QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+    OEint.fha.write("__device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
         QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
     ss.save_int()
