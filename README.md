@@ -5,9 +5,9 @@
 CUDA code generator for computing molecular integrals found in ab initio and density functional theory methods.  
 
 Features
-________
-* Generates device kernels for Coulomb attraction integrals.
+--------
+* Generates device kernels for Coulomb attraction integrals, supports up to d basis functions.
 
 Requirements
-____________
+------------
 * Python 3.9
