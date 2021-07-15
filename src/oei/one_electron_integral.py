@@ -17,8 +17,12 @@
 #!                                                                     !
 #!---------------------------------------------------------------------!
 
-import params
-import file_handler
+
+#import common.params
+#import file_handler
+
+import src.common.params as params
+import src.common.file_handler as file_handler
 
 # parent class for all one electron integrals
 class OEint:
@@ -26,7 +30,7 @@ class OEint:
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
     fha= 0  # file handler for integral assembler
-    debug=0 # include debug info in generated code, 0=no, 1=yes 
+    debug=1 # include debug info in generated code, 0=no, 1=yes 
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
@@ -598,12 +602,12 @@ class DDint(OEint):
 
         self.fha.write("  } \n")
 
-def write_oei():
+def write_oei(outdir):
 
     # set files
-    OEint.fhc = open('gpu_oei_classes.h','w')
-    OEint.fhd = open('gpu_oei_definitions.h','w')
-    OEint.fha= open('gpu_oei_assembler.h','w')
+    OEint.fhc = open(outdir+"/gpu_oei_classes.h",'w')
+    OEint.fhd = open(outdir+"/gpu_oei_definitions.h",'w')
+    OEint.fha= open(outdir+"/gpu_oei_assembler.h",'w')
 
     # write license info
     file_handler.write_license(OEint.fhc)
@@ -665,4 +669,4 @@ def write_oei():
     OEint.fhd.close()
     OEint.fha.close()
 
-write_oei()
+#write_oei()
