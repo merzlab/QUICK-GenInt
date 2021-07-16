@@ -55,7 +55,7 @@ class DFint(OEint):
             self.fhd.write("  PDint_%d pd_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|d] for m=%d \n" % (m, m, m))
             self.fhd.write("  SFint_%d sf_%d(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|f] for m=%d \n" % (m, m, m))
             self.fhd.write("  PFint_%d pf_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|f] for m=%d \n" % (m, m, m))            
-            self.fhd.write("  PDint_%d pd_%d(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|d] for m=%d \n" % (m+1, m+1, m+1))
+            self.fhd.write("  PDint_%d pd_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|d] for m=%d \n" % (m+1, m+1, m+1))
             self.fhd.write("  SFint_%d sf_%d(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [s|f] for m=%d \n" % (m+1, m+1, m+1))
             self.fhd.write("  PFint_%d pf_%d(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [p|f] for m=%d \n\n" % (m+1, m+1, m+1))             
 
@@ -69,19 +69,19 @@ class DFint(OEint):
                             tmp_mcal2[k] -= 1
                             tmp_j=params.trans[tmp_mcal2[0]][tmp_mcal2[1]][tmp_mcal2[2]]
                             iclass_obj="pf"
-                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (i+10, j+4, self.PA[k], iclass_obj, m, tmp_j-1, i+10,\
+                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (j+4, i+10, self.PA[k], iclass_obj, m, tmp_j-1, i+10,\
                             self.PC[k], iclass_obj, m+1, tmp_j-1, i+10))
 
                             if params.Mcal[j+4][k] > 1:
                                 iclass_obj="sf"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+10, j+4, iclass_obj, m, 0, i+10,\
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+10, iclass_obj, m, 0, i+10,\
                                 iclass_obj, m+1, 0, i+10))
 
                             if tmp_mcal1[k] > 0:
                                 tmp_mcal1[k] -= 1
                                 tmp_i=params.trans[tmp_mcal1[0]][tmp_mcal1[1]][tmp_mcal1[2]]
                                 iclass_obj="pd"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+10, j+4, params.Mcal[i+10][k], iclass_obj, m, tmp_j-1, tmp_i-1,\
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+10, params.Mcal[i+10][k], iclass_obj, m, tmp_j-1, tmp_i-1,\
                                 iclass_obj, m+1, tmp_j-1, tmp_i-1))
                             break
             self.fhd.write("\n } \n")

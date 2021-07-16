@@ -55,23 +55,23 @@ def write_oei(outdir):
     ss=SSint()
 
     # generate [p|s]
-    ps=PSint(3)
+    ps=PSint(5)
     ps.gen_int() 
 
     # generate [s|p]
-    sp=SPint(3)
+    sp=SPint(5)
     sp.gen_int()
 
     # generate [p|p]
-    pp=PPint(1)
+    pp=PPint(2)
     pp.gen_int()
 
     # generate [d|s]
-    ds=DSint(2)
+    ds=DSint(4)
     ds.gen_int()
 
     # generate [s|d]
-    sd=SDint(2)
+    sd=SDint(4)
     sd.gen_int() 
 
     # generate [d|p]
@@ -79,27 +79,27 @@ def write_oei(outdir):
     dp.gen_int()
 
     # generate [p|d]
-    pd=PDint(0)
+    pd=PDint(2)
     pd.gen_int()
 
     # generate [d|d]
-    dd=DDint(0)
+    dd=DDint(1)
     dd.gen_int()
 
     # generate [f|s]
-    fs=FSint(2)
+    fs=FSint(3)
     fs.gen_int()
 
     # generate [s|f]
-    sf=SFint(2)
+    sf=SFint(3)
     sf.gen_int()
 
     # generate [f|p]
-    fp=FPint(1)
+    fp=FPint(2)
     fp.gen_int()
 
     # generate [p|f]
-    pf=PFint(1)
+    pf=PFint(2)
     pf.gen_int()
 
     # generate [f|p]

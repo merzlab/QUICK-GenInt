@@ -54,8 +54,8 @@ class FPint(OEint):
                 QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
             self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n" % (m, m, m))            
             self.fhd.write("  DSint_%d ds_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [d|s] for m=%d \n" % (m+1, m+1, m+1))
-            self.fhd.write("  FSint_%d fs_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [f|s] for m=%d \n" % (m, m, m))
-            self.fhd.write("  FSint_%d fs_%d(PAx, PAy, PAz, PCx, PCy, PCz, YVerticalTemp); // construct [f|s] for m=%d \n\n" % (m+1, m+1, m+1))
+            self.fhd.write("  FSint_%d fs_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [f|s] for m=%d \n" % (m, m, m))
+            self.fhd.write("  FSint_%d fs_%d(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); // construct [f|s] for m=%d \n\n" % (m+1, m+1, m+1))
 
             for i in range(0,10):
                 for j in range(0,3):
