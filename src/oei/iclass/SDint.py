@@ -71,7 +71,7 @@ class SDint(OEint):
     def save_int(self):
         self.fha.write("\n  /* SD integral, m=%d */ \n" % (0))
         self.fha.write("  if(I == 0 && J == 2){ \n")
-        self.fha.write("    SDint_0 sd(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
+        self.fha.write("    SDint_0 sd(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sd.x_%d_%d;\n" % (0, i+4, 0, i+4))
 
