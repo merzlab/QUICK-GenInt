@@ -40,6 +40,7 @@ class OEint:
         # set orbital labels for improving readability 
         self.p_lbl=("Px", "Py", "Pz")
         self.d_lbl=("Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz")
+        self.f_lbl=("Fxyz", "Fxxy", "Fxyy", "Fxxz", "Fxzz", "Fyyz", "Fyzz", "Fxxx", "Fyyy", "Fzzz")
 
         # set labels for useful variables
         self.AA=("Ax", "Ay", "Az") # position of center A
