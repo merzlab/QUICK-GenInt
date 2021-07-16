@@ -30,6 +30,8 @@ from src.oei.iclass.SDint import SDint
 from src.oei.iclass.DPint import DPint
 from src.oei.iclass.PDint import PDint
 from src.oei.iclass.DDint import DDint
+from src.oei.iclass.FSint import FSint
+from src.oei.iclass.SFint import SFint
 
 def write_oei(outdir):
 
@@ -79,6 +81,14 @@ def write_oei(outdir):
     dd=DDint(0)
     dd.gen_int()
 
+    # generate [f|s]
+    fs=FSint(2)
+    fs.gen_int()
+
+    # generate [s|f]
+    sf=SFint(2)
+    sf.gen_int()
+
     # write driver to use classes and save computed primitive integrals
     OEint.fha.write("__device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
@@ -92,6 +102,8 @@ def write_oei(outdir):
     dp.save_int()
     pd.save_int()
     dd.save_int()
+    fs.save_int()
+    sf.save_int()
     OEint.fha.write("\n } \n")
 
     OEint.fhc.close()
