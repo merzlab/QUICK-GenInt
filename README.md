@@ -9,6 +9,10 @@ Features
 * Generates device kernels for Coulomb attraction integrals, supports up to f basis functions.
 * Integral formalism using Obara-Saika and Head-Gordon, Pople algorithms.
 
+Limitations
+-----------
+* Only supports Cartesian basis functions at the moment.
+
 Requirements
 ------------
 * Python 3.9
@@ -20,4 +24,4 @@ Before starting, make sure to go through Obara-Saika paper, which can be found [
 
 License
 -------
-QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/license.html#mozilla-public-license-version-2-0).
+QUICK-GenInt is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/license.html#mozilla-public-license-version-2-0).
