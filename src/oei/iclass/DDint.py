@@ -69,19 +69,19 @@ class DDint(OEint):
                             tmp_mcal2[k] -= 1
                             tmp_j=params.trans[tmp_mcal2[0]][tmp_mcal2[1]][tmp_mcal2[2]]
                             iclass_obj="dp"
-                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (j+4, i+4, self.PB[k], iclass_obj, m, i+4, tmp_j-1,\
+                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (i+4, j+4, self.PB[k], iclass_obj, m, i+4, tmp_j-1,\
                             self.PC[k], iclass_obj, m+1, i+4, tmp_j-1))
 
                             if params.Mcal[j+4][k] > 1:
                                 iclass_obj="ds"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[j+4][k]-1, iclass_obj, m, i+4, 0, \
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+4, j+4, params.Mcal[j+4][k]-1, iclass_obj, m, i+4, 0, \
                                 iclass_obj, m+1, i+4, 0))
 
                             if tmp_mcal1[k] > 0:
                                 tmp_mcal1[k] -= 1
                                 tmp_i=params.trans[tmp_mcal1[0]][tmp_mcal1[1]][tmp_mcal1[2]]
                                 iclass_obj="pp"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+4, i+4, params.Mcal[i+4][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+4, j+4, params.Mcal[i+4][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
                                 iclass_obj, m+1, tmp_i-1, tmp_j-1))
                             break
             self.fhd.write("\n } \n")
@@ -93,14 +93,14 @@ class DDint(OEint):
         self.fha.write("    DDint_0 dd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,6):
             for j in range(0,6):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += dd.x_%d_%d;\n" % (j+4, i+4, j+4, i+4))
+                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += dd.x_%d_%d;\n" % (i+4, j+4, i+4, j+4))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
             self.fha.write("\n#ifdef DEBUG_OEI \n")
             for i in range(0,6):
                 for j in range(0,6):
-                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DD", j+4, i+4, j+4, i+4))
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DD", i+4, j+4, i+4, j+4))
             self.fha.write("#endif \n\n")
 
         self.fha.write("  } \n")

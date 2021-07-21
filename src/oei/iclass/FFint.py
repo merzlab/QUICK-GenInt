@@ -69,21 +69,21 @@ class FFint(OEint):
                             tmp_mcal2[k] -= 1
                             tmp_j=params.trans[tmp_mcal2[0]][tmp_mcal2[1]][tmp_mcal2[2]]
                             iclass_obj="fd"
-                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (j+10, i+10, self.PB[k], iclass_obj, m, i+10, tmp_j-1,\
+                            self.fhd.write("  x_%d_%d = %s * %s_%d.x_%d_%d - %s * %s_%d.x_%d_%d; \n" % (i+10, j+10, self.PB[k], iclass_obj, m, i+10, tmp_j-1,\
                             self.PC[k], iclass_obj, m+1, i+10, tmp_j-1))
 
                             if params.Mcal[j+10][k] > 1:
                                 tmp_mcal2[k] = params.Mcal[j+10][k] - 2
                                 tmp_j2=params.trans[tmp_mcal2[0]][tmp_mcal2[1]][tmp_mcal2[2]]
                                 iclass_obj="fp"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+10, i+10, params.Mcal[j+10][k]-1, iclass_obj, m, i+10, tmp_j2-1, \
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+10, j+10, params.Mcal[j+10][k]-1, iclass_obj, m, i+10, tmp_j2-1, \
                                 iclass_obj, m+1, i+10, tmp_j2-1))
 
                             if tmp_mcal1[k] > 0:
                                 tmp_mcal1[k] -= 1
                                 tmp_i=params.trans[tmp_mcal1[0]][tmp_mcal1[1]][tmp_mcal1[2]]
                                 iclass_obj="dd"
-                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (j+10, i+10, params.Mcal[i+10][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
+                                self.fhd.write("  x_%d_%d += 0.5/Zeta * %f * (%s_%d.x_%d_%d - %s_%d.x_%d_%d); \n" % (i+10, j+10, params.Mcal[i+10][k], iclass_obj, m, tmp_i-1, tmp_j-1,\
                                 iclass_obj, m+1, tmp_i-1, tmp_j-1))
                             break
             self.fhd.write("\n } \n")
