@@ -145,6 +145,7 @@ def write_oei(outdir):
         QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
 
     ss.save_int_grad()
+    sp.save_int_grad()
 
     OEint.fhga.write("\n } \n") 
 

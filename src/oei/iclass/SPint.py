@@ -70,3 +70,28 @@ class SPint(OEint):
             self.fha.write("#endif \n\n")
 
         self.fha.write("  } \n")
+
+    # generate code to save [s|p] integral gradients
+    def save_int_grad(self):
+        self.fhga.write("\n  /* SP integral gradient, m=%d */ \n" % (0))
+        self.fhga.write("  if(I == 0 && J == 1){ \n")
+        self.fhga.write("    PPint_0 pp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
+        self.fhga.write("    SDint_0 sd(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n\n")
+
+        for i in range(0,3):
+            for j in range(0,3):
+                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))  
+
+        for i in range(0,6):
+            self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sd.x_%d_%d;\n" % (0, i+4, 0, i+4))      
+
+        if OEint.debug == 1:
+            self.fhga.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,3):
+                for j in range(0,3):
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PP", i+1, j+1, i+1, j+1))
+
+            for i in range(0,6):
+                self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SD", 0, i+4, 0, i+4))
+
+        self.fhga.write("  } \n")
