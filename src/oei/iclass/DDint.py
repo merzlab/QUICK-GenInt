@@ -105,3 +105,31 @@ class DDint(OEint):
 
         self.fha.write("  } \n")
 
+    # generate code to save [d|d] integral gradients
+    def save_int_grad(self):
+        self.fhga.write("\n  /* DD integral gradient, m=%d */ \n" % (0))
+        self.fhga.write("  if(I == 2 && J == 2){ \n")
+        self.fhga.write("    FDint_0 fd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
+        self.fhga.write("    DFint_0 df(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n\n")
+
+        for i in range(0,10):
+            for j in range(0,6):
+                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += fd.x_%d_%d;\n" % (i+10, j+4, i+10, j+4))
+
+        for i in range(0,10):
+            for j in range(0,6):
+                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += df.x_%d_%d;\n" % (j+4, i+10, j+4, i+10))
+
+        if OEint.debug == 1:
+            self.fhga.write("\n#ifdef DEBUG_OEI \n")
+            for i in range(0,10):
+                for j in range(0,6):
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "FD", i+10, j+4, i+10, j+4))
+
+            for i in range(0,10):
+                for j in range(0,6):
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DF", j+4, i+10, j+4, i+10))
+            self.fhga.write("#endif \n\n")
+
+        self.fhga.write("  } \n")
+

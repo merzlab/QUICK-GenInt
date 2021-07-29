@@ -150,6 +150,7 @@ def write_oei(outdir):
     pp.save_int_grad()
     sd.save_int_grad()
     pd.save_int_grad()
+    dd.save_int_grad()
 
     OEint.fhga.write("\n } \n") 
 
