@@ -27,6 +27,7 @@ class OEint:
     fhc = 0 # file handler for class declarations
     fhd = 0 # file handler for function implementations
     fha= 0  # file handler for integral assembler
+    fhga= 0 # file handler for integral gradient assembler
     debug=1 # include debug info in generated code, 0=no, 1=yes 
 
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
@@ -38,9 +39,11 @@ class OEint:
             print("Warning: file handlers in OEint class are not set. \n")
         
         # set orbital labels for improving readability 
+        self.s_lbl=("S")
         self.p_lbl=("Px", "Py", "Pz")
         self.d_lbl=("Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz")
         self.f_lbl=("Fxyz", "Fxxy", "Fxyy", "Fxxz", "Fxzz", "Fyyz", "Fyzz", "Fxxx", "Fyyy", "Fzzz")
+        self.g_lbl=("Gxxyy", "Gxxzz", "Gyyzz", "Gxxyz", "Gxyyz", "Gxyzz", "Gxxxz", "Gxzzz", "Gxxxy", "Gxyyy", "Gyyyz", "Gyzzz", "Gxxxx", "Gyyyy", "Gzzzz")
 
         # set labels for useful variables
         self.AA=("Ax", "Ay", "Az") # position of center A
