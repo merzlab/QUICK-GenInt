@@ -93,5 +93,6 @@ class SPint(OEint):
 
             for i in range(0,6):
                 self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SD", 0, i+4, 0, i+4))
+            self.fhga.write("#endif \n\n")
 
         self.fhga.write("  } \n")
