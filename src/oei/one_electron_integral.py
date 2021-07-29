@@ -44,13 +44,15 @@ def write_oei(outdir):
     OEint.fhc = open(outdir+"/gpu_oei_classes.h",'w')
     OEint.fhd = open(outdir+"/gpu_oei_definitions.h",'w')
     OEint.fha= open(outdir+"/gpu_oei_assembler.h",'w')
+    OEint.fhga= open(outdir+"/gpu_oei_grad_assembler.h",'w')
 
     # write license info
     file_handler.write_license(OEint.fhc)
     file_handler.write_license(OEint.fhd)
     file_handler.write_license(OEint.fha)
+    file_handler.write_license(OEint.fhga)
 
-    # generate integral classes for systems containing only s, p and d functions.
+    # generate integral classes for systems containing only s, p, d and f functions.
     # generate [s|s], this is trivial and we will directly save the integral value from the driver. 
     ss=SSint()
 
@@ -115,7 +117,7 @@ def write_oei(outdir):
     ff.gen_int() 
 
     # write driver to use classes and save computed primitive integrals
-    OEint.fha.write("__device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+    OEint.fha.write("__device__ __inline__ void oei_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
         QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
     ss.save_int()
@@ -137,7 +139,18 @@ def write_oei(outdir):
 
     OEint.fha.write("\n } \n")
 
+    # write driver to use classes and save computed primitive integral gradient
+    OEint.fhga.write("__device__ __inline__ void oei_grad_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
+        QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
+
+    ss.save_int_grad()
+
+    OEint.fhga.write("\n } \n") 
+
     OEint.fhc.close()
     OEint.fhd.close()
     OEint.fha.close()
+    OEint.fhga.close()
+
 
