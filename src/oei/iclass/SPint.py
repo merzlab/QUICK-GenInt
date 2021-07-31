@@ -78,6 +78,8 @@ class SPint(OEint):
         self.fhga.write("    PPint_0 pp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         self.fhga.write("    SDint_0 sd(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n\n")
 
+        self.fhga.write("    LOC2(store, 0, 0, STOREDIM, STOREDIM) += VY(0, 0, 0);\n")
+
         for i in range(0,3):
             for j in range(0,3):
                 self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))  
@@ -87,6 +89,7 @@ class SPint(OEint):
 
         if OEint.debug == 1:
             self.fhga.write("\n#ifdef DEBUG_OEI \n")
+            self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, 0, 0, STOREDIM, STOREDIM)); \n" % ( "SS", 0, 0))
             for i in range(0,3):
                 for j in range(0,3):
                     self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PP", i+1, j+1, i+1, j+1))

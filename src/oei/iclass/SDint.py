@@ -88,8 +88,12 @@ class SDint(OEint):
     def save_int_grad(self):
         self.fhga.write("\n  /* SD integral gradient, m=%d */ \n" % (0))
         self.fhga.write("  if(I == 0 && J == 2){ \n")
+        self.fhga.write("    SPint_0 sp(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); \n")
         self.fhga.write("    PDint_0 pd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         self.fhga.write("    SFint_0 sf(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n\n")
+
+        for i in range(0,3):                
+            self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sp.x_%d_%d;\n" % (0, i+1, 0, i+1))
 
         for i in range(0,6):
             for j in range(0,3):
@@ -100,6 +104,10 @@ class SDint(OEint):
 
         if OEint.debug == 1:
             self.fhga.write("\n#ifdef DEBUG_OEI \n")
+
+            for i in range(0,3):
+                self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SP", 0, i+1, 0, i+1))
+
             for i in range(0,6):
                 for j in range(0,3):
                     self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PD", j+1, i+4, j+1, i+4))
@@ -109,4 +117,3 @@ class SDint(OEint):
             self.fhga.write("#endif \n\n")
 
         self.fhga.write("  } \n")
-        

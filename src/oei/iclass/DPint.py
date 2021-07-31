@@ -98,8 +98,17 @@ class DPint(OEint):
     def save_int_grad(self):
         self.fhga.write("\n  /* DP integral gradient, m=%d */ \n" % (0))
         self.fhga.write("  if(I == 2 && J == 1){ \n")
+        self.fhga.write("    DSint_0 ds(PAx, PAy, PAz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
+        self.fhga.write("    PPint_0 pp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         self.fhga.write("    DDint_0 dd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         self.fhga.write("    FPint_0 fp(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n\n")
+
+        for i in range(0,6):
+            self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += ds.x_%d_%d;\n" % (i+4, 0, i+4, 0))
+
+        for i in range(0,3):
+            for j in range(0,3):
+                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pp.x_%d_%d;\n" % (i+1, j+1, i+1, j+1))
 
         for i in range(0,6):
             for j in range(0,6):
@@ -111,6 +120,14 @@ class DPint(OEint):
 
         if OEint.debug == 1:
             self.fhga.write("\n#ifdef DEBUG_OEI \n")
+
+            for i in range(0,6):
+                self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DS", i+4, 0, i+4, 0))
+
+            for i in range(0,3):
+                for j in range(0,3):
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PP", i+1, j+1, i+1, j+1))
+
             for i in range(0,6):
                 for j in range(0,6):
                     self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DD", i+4, j+4, i+4, j+4))
