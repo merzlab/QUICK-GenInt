@@ -94,14 +94,14 @@ class PFint(OEint):
         self.fha.write("    PFint_0 pf(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,10):
             for j in range(0,3):
-                self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pf.x_%d_%d;\n" % (j+1, i+10, j+1, i+10))
+                self.fha.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = pf.x_%d_%d;\n" % (j+1, i+10, j+1, i+10))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
             self.fha.write("\n#ifdef DEBUG_OEI \n")
             for i in range(0,10):
                 for j in range(0,3):
-                    self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PF", j+1, i+10, j+1, i+10))
+                    self.fha.write("    printf(\"II %%d JJ %%d %s store2[%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PF", j+1, i+10, j+1, i+10))
             self.fha.write("#endif \n\n")
 
         self.fha.write("  } \n")

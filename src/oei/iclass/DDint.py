@@ -116,38 +116,38 @@ class DDint(OEint):
 
         for i in range(0,6):
             for j in range(0,3):
-                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
+                self.fhga.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = pd.x_%d_%d;\n" % (j+1, i+4, j+1, i+4))
 
         for i in range(0,6):
             for j in range(0,3):
-                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
+                self.fhga.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = dp.x_%d_%d;\n" % (i+4, j+1, i+4, j+1))
 
         for i in range(0,10):
             for j in range(0,6):
-                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += fd.x_%d_%d;\n" % (i+10, j+4, i+10, j+4))
+                self.fhga.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = fd.x_%d_%d;\n" % (i+10, j+4, i+10, j+4))
 
         for i in range(0,10):
             for j in range(0,6):
-                self.fhga.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += df.x_%d_%d;\n" % (j+4, i+10, j+4, i+10))
+                self.fhga.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = df.x_%d_%d;\n" % (j+4, i+10, j+4, i+10))
 
         if OEint.debug == 1:
             self.fhga.write("\n#ifdef DEBUG_OEI \n")
 
             for i in range(0,6):
                 for j in range(0,3):
-                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PD", j+1, i+4, j+1, i+4))
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store2[%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "PD", j+1, i+4, j+1, i+4))
 
             for i in range(0,6):
                 for j in range(0,3):
-                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DP", i+4, j+1, i+4, j+1))
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store2[%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DP", i+4, j+1, i+4, j+1))
 
             for i in range(0,10):
                 for j in range(0,6):
-                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "FD", i+10, j+4, i+10, j+4))
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store2[%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "FD", i+10, j+4, i+10, j+4))
 
             for i in range(0,10):
                 for j in range(0,6):
-                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DF", j+4, i+10, j+4, i+10))
+                    self.fhga.write("    printf(\"II %%d JJ %%d %s store[2%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "DF", j+4, i+10, j+4, i+10))
 
             self.fhga.write("#endif \n\n")
 

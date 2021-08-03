@@ -141,8 +141,8 @@ def write_oei(outdir):
 
     # write driver to use classes and save computed primitive integral gradient
     OEint.fhga.write("__device__ __inline__ void oei_grad_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
-        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
-        QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
+        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble AA,\n\
+        QUICKDouble BB, QUICKDouble Zeta, QUICKDouble* store2, QUICKDouble* YVerticalTemp){ \n")
 
     ss.save_int_grad()
     sp.save_int_grad()

@@ -78,13 +78,13 @@ class SFint(OEint):
         self.fha.write("  if(I == 0 && J == 3){ \n")
         self.fha.write("    SFint_0 sf(PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); \n")
         for i in range(0,10):
-            self.fha.write("    LOC2(store, %d, %d, STOREDIM, STOREDIM) += sf.x_%d_%d;\n" % (0, i+10, 0, i+10))
+            self.fha.write("    LOC2(store2, %d, %d, STOREDIM, STOREDIM) = sf.x_%d_%d;\n" % (0, i+10, 0, i+10))
 
         # include print statements if debug option is on    
         if OEint.debug == 1:
             self.fha.write("\n#ifdef DEBUG_OEI \n")
             for i in range(0,10):
-                self.fha.write("    printf(\"II %%d JJ %%d %s store[%d,%d] = %%f \\n\", II, JJ, LOC2(store, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SF", 0, i+10, 0, i+10))
+                self.fha.write("    printf(\"II %%d JJ %%d %s store2[%d,%d] = %%f \\n\", II, JJ, LOC2(store2, %d, %d, STOREDIM, STOREDIM)); \n" % ( "SF", 0, i+10, 0, i+10))
             self.fha.write("#endif \n\n")
 
         self.fha.write("  } \n")
