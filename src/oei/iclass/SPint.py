@@ -42,12 +42,12 @@ class SPint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+1, "S", self.p_lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (m))
+            self.fhc.write("  %s SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (self.func_qualifier, m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ SPint_%d::SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("%s SPint_%d::SPint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (self.func_qualifier, m, m))
 
             for i in range(0,3):
                 self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (0, i+1, self.PB[i], m, self.PC[i], m+1))

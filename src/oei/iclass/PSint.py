@@ -42,12 +42,12 @@ class PSint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (i+1, 0, self.p_lbl[i], "S"))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (m))
+            self.fhc.write("  %s PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp); \n" % (self.func_qualifier, m))
             self.fhc.write("}; \n")
 
-            self.fhd.write("__device__ __inline__ PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("%s PSint_%d::PSint_%d(QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble* YVerticalTemp){ \n\n" % (self.func_qualifier, m, m))
             for i in range(0,3):
                 self.fhd.write("  x_%d_%d = %s * VY(0, 0, %d) - %s * VY(0, 0, %d);\n" % (i+1, 0, self.PA[i], m, self.PC[i], m+1))
 

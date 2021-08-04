@@ -34,6 +34,10 @@ except OSError as error:
 
 import src.oei.one_electron_integral as one_electron_integral
 
+# set function qualifiers. If you want to generate host code, leave an empty string.
+# The default is for generating cuda code. 
+func_qualifier='__device__ __inline__'
+
 # generate one electron integral source code
-one_electron_integral.write_oei(outdir)
+one_electron_integral.write_oei(outdir, func_qualifier)
 

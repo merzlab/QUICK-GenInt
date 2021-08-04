@@ -38,13 +38,16 @@ from src.oei.iclass.FDint import FDint
 from src.oei.iclass.DFint import DFint
 from src.oei.iclass.FFint import FFint
 
-def write_oei(outdir):
+def write_oei(outdir, func_qualifier='__device__ __inline__'):
 
     # set files
     OEint.fhc = open(outdir+"/gpu_oei_classes.h",'w')
     OEint.fhd = open(outdir+"/gpu_oei_definitions.h",'w')
     OEint.fha= open(outdir+"/gpu_oei_assembler.h",'w')
     OEint.fhga= open(outdir+"/gpu_oei_grad_assembler.h",'w')
+
+    # set function qualifiers
+    OEint.func_qualifier=func_qualifier
 
     # write license info
     file_handler.write_license(OEint.fhc)
@@ -164,9 +167,9 @@ def write_oei(outdir):
 
     # Yvertical - a 1D array holding boys function values,the size is Max_I+ Max_J+2.
 
-    OEint.fha.write("__device__ __inline__ void oei_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+    OEint.fha.write("%s void oei_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
-        QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n")
+        QUICKDouble* store, QUICKDouble* YVerticalTemp){ \n" % (func_qualifier))
     ss.save_int()
     ps.save_int()
     sp.save_int()
@@ -187,9 +190,9 @@ def write_oei(outdir):
     OEint.fha.write("\n } \n")
 
     # Write the driver to save computed primitive integrals required for gradient calculation. The parameters are the same that we reported above. 
-    OEint.fhga.write("__device__ __inline__ void oei_grad_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
+    OEint.fhga.write("%s void oei_grad_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,\n\
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,\n\
-        QUICKDouble* store2, QUICKDouble* YVerticalTemp){ \n")
+        QUICKDouble* store2, QUICKDouble* YVerticalTemp){ \n" % (func_qualifier))
 
     ss.save_int_grad()
     sp.save_int_grad()
