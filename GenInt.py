@@ -37,3 +37,15 @@ import src.oei.one_electron_integral as one_electron_integral
 # generate one electron integral source code
 one_electron_integral.write_oei(outdir)
 
+def print_store():
+
+    labels = ("S", "Px", "Py", "Pz", "Dxy", "Dyz", "Dxz", "Dxx", "Dyy", "Dzz", "Fxyz", "Fxxy", "Fxyy", "Fxxz", "Fxzz", "Fyyz", "Fyzz", "Fxxx", "Fyyy", "Fzzz",\
+        "Gxxyy", "Gxxzz", "Gyyzz", "Gxxyz", "Gxyyz", "Gxyzz", "Gxxxz", "Gxzzz", "Gxxxy", "Gxyyy", "Gyyyz", "Gyzzz", "Gxxxx", "Gyyyy", "Gzzzz")
+
+    for i in range(0, 35):
+        str=''
+        for j in range(0,35):
+            str += "[" + labels[i] + "|" + labels[j] + "]"
+        print(str)
+
+print_store()
