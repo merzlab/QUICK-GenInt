@@ -42,13 +42,13 @@ class SDint(OEint):
                 self.fhc.write("  QUICKDouble x_%d_%d; // %s, %s \n" % (0, i+4, "S", self.d_lbl[i]))
 
             # write class functions
-            self.fhc.write("  __device__ __inline__ SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (m))          
+            self.fhc.write("  %s SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp); \n" % (self.func_qualifier, m))          
             self.fhc.write("}; \n")
 
             # write function definitions
-            self.fhd.write("__device__ __inline__ SDint_%d::SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
-                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (m, m))
+            self.fhd.write("%s SDint_%d::SDint_%d(QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,\n\
+                QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta, QUICKDouble* YVerticalTemp){ \n\n" % (self.func_qualifier, m, m))
             self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n" % (m, m, m))
             self.fhd.write("  SPint_%d sp_%d(PBx, PBy, PBz, PCx, PCy, PCz, YVerticalTemp); // construct [s|p] for m=%d \n\n" % (m+1, m+1, m+1))
 

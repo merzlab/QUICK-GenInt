@@ -30,11 +30,15 @@ class OEint:
     fhga= 0 # file handler for integral gradient assembler
     debug=1 # include debug info in generated code, 0=no, 1=yes 
 
+    # set function qualifiers
+    func_qualifier='__device__ __inline__'
+
     # max_m ranges from 0 to a+b; where a and b are the angular momentum of i and j
     # of the integral being considered [i|j]. If max_m=0, the integral is a true integral
     # and m>0 results in auxliary integrals. 
     def __init__(self,max_m=0):
         self.max_m=max_m
+
         if self.fhc == 0 or self.fhd == 0:
             print("Warning: file handlers in OEint class are not set. \n")
         
